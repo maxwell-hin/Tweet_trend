@@ -311,7 +311,7 @@ def keep_scroling(driver, data, writer, tweet_ids, scrolling, tweet_parsed, limi
                 scroll_attempt += 1
                 print('scroll attempt: '+str(scroll_attempt))
                 # end of scroll region
-                if scroll_attempt >= 15:
+                if scroll_attempt >= 10:
                     scrolling = False
                     break
                 else:
