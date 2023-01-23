@@ -1,4 +1,5 @@
 from Scweet_master.Scweet.scweet import scrape
+import time
 # from Scweet.user import get_user_information, get_users_following, get_users_followers
 
 
@@ -9,11 +10,13 @@ def run_scrape(words, since, until,interval, geocode):
     return data
 
 word = 'Coca-cola'
-since = '2020-10-01'
-until = '2020-10-03'
+since = '2022-06-01'
+until = '2022-12-31'
 interval = 3
 
 US_geo = '41.4925374,-99.9018131,1500km'
 
-
+tic = time.time()
 data = run_scrape(word, since, until,interval ,US_geo)
+tac = time.time()
+print(f'runtime: {round(tac-tic,2)/60} mins')
