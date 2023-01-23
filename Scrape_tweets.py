@@ -20,3 +20,5 @@ tic = time.time()
 data = run_scrape(word, since, until,interval ,US_geo)
 tac = time.time()
 print(f'runtime: {round(tac-tic,2)/60} mins')
+
+# data.to_csv('./outputs/coca-cola_220601_221231_int3.csv')
