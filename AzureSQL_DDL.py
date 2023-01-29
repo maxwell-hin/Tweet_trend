@@ -80,6 +80,13 @@ def update_records(df, kw_id):
         cursor.execute(query) 
         cnxn.commit()   
 
+def new_keywords(keyword):
+    query = f'''INSERT INTO keywords (keyword)
+    VALUES (keyword);'''
+    cnxn = connect_asql()
+    cursor = cnxn.cursor()
+    cursor.execute(query) 
+    cnxn.commit()
 
 
 #======================Query data
