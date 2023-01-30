@@ -45,10 +45,10 @@ def max_tweets (df):
 
     return max_cm, max_likes, max_retweets, url_cm, url_likes, url_retweets
 
-scores_three = max_tweets(pepsi)
-print('The max number of comments: ' + str(scores_three[0]), 'URL: ' + str(scores_three[3]))
-print('The max number of likes: ' + str(scores_three[1]), 'URL: ' + str(scores_three[4]))
-print('The max number of retweets: ' + str(scores_three[2]),'URL: ' + str(scores_three[5]))
+# scores_three = max_tweets(pepsi)
+# print('The max number of comments: ' + str(scores_three[0]), 'URL: ' + str(scores_three[3]))
+# print('The max number of likes: ' + str(scores_three[1]), 'URL: ' + str(scores_three[4]))
+# print('The max number of retweets: ' + str(scores_three[2]),'URL: ' + str(scores_three[5]))
 
 
 def removetime (df):
@@ -67,8 +67,8 @@ print(tweets_per_day)
 
 import datetime
 import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
+# import matplotlib.pyplot as plt
+
 
 # fig, ax = plt.subplots()
 # tweets_per_day.plot(kind='line', ax=ax)
@@ -108,7 +108,6 @@ for lab, row in pepsi.iterrows():
                 except Exception as err:
                     emojis_each_tweets = emojis_each_tweets -1
                     pass 
-                    print(emojis_each_tweets)
             if emojis_each_tweets == 0:
                 emoji_list.append(0)
             else:
@@ -117,64 +116,49 @@ for lab, row in pepsi.iterrows():
             
 
 # print(score)         
-print(emoji_list)
+# print(emoji_list)
 # print(score_each_tweets)
-len(emoji_list)
+# len(emoji_list)
 
 
 from textblob import TextBlob
-import sys
-import pandas as pd
-import numpy as np
-import os
+# import sys
 import nltk
-import re
-import string
+nltk.download('vader_lexicon')
+# import re
+# import string
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
-from nltk.stem import SnowballStemmer
-from nltk.sentiment.vader import SentimentIntensityAnalyzer
-pepsi=pd.read_csv('./outputs/pepsi_2022-06-01_2022-12-31.csv')
+# from nltk.stem import SnowballStemmer
 
-def percentage(part,whole):
- return 100 * float(part)/float(whole)
-positive = 0
-negative = 0
-neutral = 0
-polarity = 0
-tweet_list = []
-neutral_list = []
-negative_list = []
-positive_list = []
+# def percentage(part,whole):
+#  return 100 * float(part)/float(whole)
+# positive = 0
+# negative = 0
+# neutral = 0
+# polarity = 0
+# tweet_list = []
+# neutral_list = []
+# negative_list = []
+# positive_list = []
 
 score_df_pepsi = pd.DataFrame()
 for pepsi_text in pepsi['Embedded_text']:
     score = SentimentIntensityAnalyzer().polarity_scores(str(pepsi_text))
     score_df=pd.DataFrame(score, index=[0])
-    score_df_pepsi=score_df_pepsi.append(score_df)
+    # score_df_pepsi=score_df_pepsi.append(score_df)
+    score_df_pepsi = pd.concat([score_df_pepsi,score_df])
 score_df1=score_df_pepsi.reset_index(drop=True)
-print(score_df1)
+# print(score_df1)
 
 emoji_sentdf = pd.DataFrame({'emoji_sent':emoji_list})
-print(emoji_sentdf)
+# print(emoji_sentdf)
 
 rawdf = pepsi[['UserScreenName','UserName','Timestamp','Tweet URL']]
-print(rawdf)
+# print(rawdf)
 
 df4 = pd.concat([emoji_sentdf,rawdf,score_df1], axis=1)
-print(df4)
-print(df4.info())
-
-import os
-os.getcwd()
-
-
-
-
-
-
-
-
-
+print(df4.head())
+# print(df4.info())
 
 
 
