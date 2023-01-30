@@ -30,10 +30,10 @@ def run_scrape(words, since, until,interval, geocode):
 
 
 
-US_geo = '41.4925374,-99.9018131,1500km'
+
 
 tic = time.time()
-data = run_scrape(word, since, until,interval ,US_geo)
+data = run_scrape(word, since, until,interval )
 tac = time.time()
 print(f'runtime: {round(tac-tic,2)/60} mins')
 
