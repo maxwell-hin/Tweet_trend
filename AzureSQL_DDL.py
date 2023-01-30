@@ -32,22 +32,21 @@ def keyword_hist(kw):
         return False, None
 
 
-#find latest tweets 
-def latest_scrape_date(kw_id):
+#find date range of history tweets 
+def hist_date_range(kw_id):
     cnxn = connect_asql()
     cursor = cnxn.cursor()
     cursor.execute(f'''SELECT max(time_stamp) FROM tweets
                         WHERE keyword_id = {kw_id};    ''')
     row = cursor.fetchone()
-    return row[0].strftime("%Y-%m-%d")
-
-latest_scrape_date(1)
-
-
+    earliest_tweet = row[0].strftime("%Y-%m-%d")
+    cursor.execute(f'''SELECT min(time_stamp) FROM tweets
+                        WHERE keyword_id = {kw_id};    ''')
+    row = cursor.fetchone()
+    oldest_tweet = row[0].strftime("%Y-%m-%d")
+    return earliest_tweet, oldest_tweet
 
 #============insert data
-df = pd.read_csv('./outputs/Burger King_2022-06-01_2022-12-31.csv')
-
 def tweet2query(df, kw_id):  
     if pd.isna(df['Emojis']):
         emojis_uc = 'NULL'
@@ -90,10 +89,12 @@ def new_keywords(keyword):
 
 
 #======================Query data
-query = "SELECT * FROM tweets;"
-def download_from_db(query):
+
+def download_from_db(kw_id, since, until):
+    query = f"SELECT * FROM tweets WHERE keyword_id = {kw_id};"
     cnxn = connect_asql()
     cursor = cnxn.cursor()
+    cursor.execute(query)
     row = cursor.fetchone() 
     df_list = [elem for elem in row]
     df = pd.DataFrame()
