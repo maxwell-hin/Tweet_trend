@@ -2,6 +2,7 @@ import pandas as pd
 import os
 pepsi = pd.read_csv('./outputs/pepsi_2022-06-01_2022-12-31.csv')
 #pepsi
+os.getcwd()
 
 def sum_tweets (df):
     total_tweets = len(df) 
@@ -83,36 +84,40 @@ plt.show()
 
 from emosent_py.emosent_b.emosent import get_emoji_sentiment_rank
 
-emoji_list = []
-for lab, row in pepsi.iterrows():
-    if pd.isnull(row['Emojis']) != False:
-        emoji_list.append(0)
-    elif pd.isnull(row['Emojis']) == False:
-        # if len(row['Emojis']) == 1:
-        #     try:
-        #         emoji_list.append(get_emoji_sentiment_rank(row['Emojis'])['sentiment_score'])
-        #     except:
-        #         pass
-        if len(row['Emojis']) >= 1:
-            # row['Emojis'].split(" ")
-            # print(row['Emojis'])
-            emojis_each_tweets = len(row['Emojis'].split(" ")) 
-            # emojis_each_tweets
+    
+def emo_list1(emo_list):
+    emoji_list = []
+    for lab, row in emo_list.iterrows():
+        if pd.isnull(row['Emojis']) != False:
+            emoji_list.append(0)
+        elif pd.isnull(row['Emojis']) == False:
+            # if len(row['Emojis']) == 1:
+            #     try:
+            #         emoji_list.append(get_emoji_sentiment_rank(row['Emojis'])['sentiment_score'])
+            #     except:
+            #         pass
+            if len(row['Emojis']) >= 1:
+                # row['Emojis'].split(" ")
+                # print(row['Emojis'])
+                emojis_each_tweets = len(row['Emojis'].split(" ")) 
+                # emojis_each_tweets
 
-            score = 0           
-            for each_emoji in row['Emojis'].split(" "):
-                try:
-                    # print(get_emoji_sentiment_rank(each_emoji)['sentiment_score'])
-                    score = score + get_emoji_sentiment_rank(each_emoji)['sentiment_score']
+                score = 0           
+                for each_emoji in row['Emojis'].split(" "):
+                    try:
+                        # print(get_emoji_sentiment_rank(each_emoji)['sentiment_score'])
+                        score = score + get_emoji_sentiment_rank(each_emoji)['sentiment_score']
 
-                except Exception as err:
-                    emojis_each_tweets = emojis_each_tweets -1
-                    pass 
-            if emojis_each_tweets == 0:
-                emoji_list.append(0)
-            else:
-                score_each_tweets = score/emojis_each_tweets
-                emoji_list.append(score_each_tweets)
+                    except Exception as err:
+                        emojis_each_tweets = emojis_each_tweets -1
+                        pass 
+                if emojis_each_tweets == 0:
+                    emoji_list.append(0)
+                else:
+                    score_each_tweets = score/emojis_each_tweets
+                    emoji_list.append(score_each_tweets)
+    return emoji_list
+
             
 
 # print(score)         
@@ -121,7 +126,7 @@ for lab, row in pepsi.iterrows():
 # len(emoji_list)
 
 
-from textblob import TextBlob
+#from textblob import TextBlob
 # import sys
 import nltk
 nltk.download('vader_lexicon')
@@ -142,14 +147,21 @@ from nltk.sentiment.vader import SentimentIntensityAnalyzer
 # negative_list = []
 # positive_list = []
 
-score_df_pepsi = pd.DataFrame()
-for pepsi_text in pepsi['Embedded_text']:
-    score = SentimentIntensityAnalyzer().polarity_scores(str(pepsi_text))
-    score_df=pd.DataFrame(score, index=[0])
+
+
+
+def keyword_data(keyword):
+    score_df_keyword = pd.DataFrame()
+    for keyword_text in keyword['Embedded_text']:
+      score = SentimentIntensityAnalyzer().polarity_scores(str(keyword_text))
+      score_df=pd.DataFrame(score, index=[0])
     # score_df_pepsi=score_df_pepsi.append(score_df)
-    score_df_pepsi = pd.concat([score_df_pepsi,score_df])
-score_df1=score_df_pepsi.reset_index(drop=True)
+      score_df_keyword = pd.concat([score_df_keyword,score_df])
+    score_df1=score_df_keyword.reset_index(drop=True)
 # print(score_df1)
+    return score_df1
+
+
 
 emoji_sentdf = pd.DataFrame({'emoji_sent':emoji_list})
 # print(emoji_sentdf)
