@@ -6,4 +6,5 @@ chromedriver-autoinstaller
 geckodriver-autoinstaller
 urllib3
 pyodbc
-textblob
+nltk
+matplotlib

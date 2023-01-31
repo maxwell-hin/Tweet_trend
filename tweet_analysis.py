@@ -1,8 +1,11 @@
 import pandas as pd
-import os
+import datetime
+import numpy as np
 pepsi = pd.read_csv('./outputs/pepsi_2022-06-01_2022-12-31.csv')
-#pepsi
-os.getcwd()
+pepsi = pepsi.dropna(subset=['Embedded_text'])
+import nltk
+# nltk.download('vader_lexicon')
+import matplotlib.pyplot as plt
 
 def sum_tweets (df):
     total_tweets = len(df) 
@@ -11,12 +14,7 @@ def sum_tweets (df):
     total_retweets = df['Retweets'].sum() 
     return total_tweets, total_likes, total_comments, total_retweets
 
-# scores = sum_tweets (pepsi)
-# print(scores)
-# print("Total tweets : "+ str(scores[0]))
-# print("Total comments: "+ str(scores[1]))
-# print("Total likes: "+ str(scores[2]))
-# print("Total retweets: "+ str(scores[3]))
+
 
 def ratio_tweets (df):
     total_likes = df['Likes'].sum()
@@ -29,12 +27,7 @@ def ratio_tweets (df):
     comments_ratio = total_comments/total_scores
     retweets_ratio = total_retweets/total_scores
     return total_likes, total_comments, total_retweets, total_scores, comments_ratio, likes_ratio, retweets_ratio
-    
-scores_two = ratio_tweets (pepsi)
-print("Total Scores:", scores_two[3])
-print("Comments Ratio:", scores_two[4])
-print("Likes Ratio:", scores_two[5])
-print("Retweets Ratio:", scores_two[6])
+
 
 def max_tweets (df):
     max_cm = df['Comments'].max()
@@ -46,10 +39,6 @@ def max_tweets (df):
 
     return max_cm, max_likes, max_retweets, url_cm, url_likes, url_retweets
 
-# scores_three = max_tweets(pepsi)
-# print('The max number of comments: ' + str(scores_three[0]), 'URL: ' + str(scores_three[3]))
-# print('The max number of likes: ' + str(scores_three[1]), 'URL: ' + str(scores_three[4]))
-# print('The max number of retweets: ' + str(scores_three[2]),'URL: ' + str(scores_three[5]))
 
 
 def removetime (df):
@@ -59,15 +48,11 @@ def removetime (df):
 
     return groupbytimestamp
 
-tweets_per_day = removetime(pepsi)
-print(tweets_per_day)
 
 
-# pd.date_range(start='01/06/2022', end='31/12/2022')
 
 
-import datetime
-import numpy as np
+
 # import matplotlib.pyplot as plt
 
 
@@ -75,37 +60,29 @@ import numpy as np
 # tweets_per_day.plot(kind='line', ax=ax)
 # ax.set_xticklabels(tweets_per_day.index.strftime('%y-%m-%d'))
 
-tweets_per_day.plot(kind='line')
-plt.ylabel('Number of tweets')
-plt.xlabel('Timestamp')
-plt.title('Tweets per day')
-plt.show()
+# tweets_per_day.plot(kind='line')
+# plt.ylabel('Number of tweets')
+# plt.xlabel('Timestamp')
+# plt.title('Tweets per day')
+# plt.show()
 
 
-from emosent_py.emosent_b.emosent import get_emoji_sentiment_rank
+
 
     
-def emo_list1(emo_list):
+def emo_list(raw_df):
+    from emosent_py.emosent_b.emosent import get_emoji_sentiment_rank
     emoji_list = []
-    for lab, row in emo_list.iterrows():
+    for lab, row in raw_df.iterrows():
         if pd.isnull(row['Emojis']) != False:
             emoji_list.append(0)
         elif pd.isnull(row['Emojis']) == False:
-            # if len(row['Emojis']) == 1:
-            #     try:
-            #         emoji_list.append(get_emoji_sentiment_rank(row['Emojis'])['sentiment_score'])
-            #     except:
-            #         pass
-            if len(row['Emojis']) >= 1:
-                # row['Emojis'].split(" ")
-                # print(row['Emojis'])
-                emojis_each_tweets = len(row['Emojis'].split(" ")) 
-                # emojis_each_tweets
 
+            if len(row['Emojis']) >= 1:
+                emojis_each_tweets = len(row['Emojis'].split(" ")) 
                 score = 0           
                 for each_emoji in row['Emojis'].split(" "):
                     try:
-                        # print(get_emoji_sentiment_rank(each_emoji)['sentiment_score'])
                         score = score + get_emoji_sentiment_rank(each_emoji)['sentiment_score']
 
                     except Exception as err:
@@ -120,69 +97,83 @@ def emo_list1(emo_list):
 
             
 
-# print(score)         
-# print(emoji_list)
-# print(score_each_tweets)
-# len(emoji_list)
+def keyword_data(raw_df):
 
-
-#from textblob import TextBlob
-# import sys
-import nltk
-nltk.download('vader_lexicon')
-nltk.download('punkt')
-# import re
-# import string
-from nltk.sentiment.vader import SentimentIntensityAnalyzer
-# from nltk.stem import SnowballStemmer
-
-# def percentage(part,whole):
-#  return 100 * float(part)/float(whole)
-# positive = 0
-# negative = 0
-# neutral = 0
-# polarity = 0
-# tweet_list = []
-# neutral_list = []
-# negative_list = []
-# positive_list = []
-
-
-
-
-def keyword_data(keyword):
+    from nltk.sentiment.vader import SentimentIntensityAnalyzer
     score_df_keyword = pd.DataFrame()
-    for keyword_text in keyword['Embedded_text']:
+    for keyword_text in df['Embedded_text']:
       score = SentimentIntensityAnalyzer().polarity_scores(str(keyword_text))
       score_df=pd.DataFrame(score, index=[0])
-    # score_df_pepsi=score_df_pepsi.append(score_df)
       score_df_keyword = pd.concat([score_df_keyword,score_df])
     score_df1=score_df_keyword.reset_index(drop=True)
-# print(score_df1)
     return score_df1
 
 
 
-emoji_sentdf = pd.DataFrame({'emoji_sent':emoji_list})
+# emoji_sentdf = pd.DataFrame({'emoji_sent':emoji_list})
 # print(emoji_sentdf)
 
-rawdf = pepsi[['UserScreenName','UserName','Timestamp','Tweet URL']]
+# rawdf = pepsi[['UserName','Timestamp','Tweet URL']]
 # print(rawdf)
 
-df4 = pd.concat([emoji_sentdf,rawdf,score_df1], axis=1)
-print(df4.head())
+# df4 = pd.concat([emoji_sentdf,rawdf,score_df1], axis=1)
+# print(df4.head())
 # print(df4.info())
 
 
-# =============NLTK
-from nltk.tokenize import word_tokenize
-para = "Hello everyone. It's good to see you. How are you doing?"
-words = word_tokenize(para)
+# =============Visualization
+
+#word_cloud
+def tokenize_and_process(sentence, kw):
+    from nltk.tokenize import word_tokenize
+    from nltk.stem import PorterStemmer
+    from nltk.corpus import stopwords
+    from nltk.stem import WordNetLemmatizer
+    from string import punctuation
+    nltk.download('punkt')
+    nltk.download('stopwords')
+    nltk.download('wordnet')
+    tokens = word_tokenize(sentence)
+    stemmer = PorterStemmer()
+    lemmatizer = WordNetLemmatizer()
+    stop_words = set(stopwords.words('english'))
+    forbidden_word = ['fuck','nigger','damn','shit']
+    meaningful_words = [lemmatizer.lemmatize(stemmer.stem(word.lower())) for word in tokens if word.lower() not in stop_words and word not in punctuation and word not in forbidden_word and word.isalpha() and word.encode("utf-8").isascii() and word != kw]
+    return meaningful_words
+
+
+def word_token2list(df, kw):
+    words_list = []
+    for lab,row in df.iterrows():
+        words_list.append(tokenize_and_process(row['Embedded_text'],kw))
+    return words_list
 
 
 
+def gen_freq(df, kw, num=80):
+    words = []
+    word_list = word_token2list(df, kw)
+    for tw_word in word_list:
+        words.extend(tw_word)
+    word_freq = pd.Series(words).value_counts()
+    return word_freq[:num]
+
+# gen_freq(df, 'Pepsi')
+
+def word_cloud(df, kw ,num=80):
+    from wordcloud import WordCloud
+    import random
+    colormaps = ['Paired', 'Accent', 'Dark2',
+                      'Set1', 'Set2', 'Set3', 'tab10', 'tab20', 'tab20b',
+                      'tab20c']
+    
+    #Generate word cloud
+    wc = WordCloud(width=700, height=320, background_color='white', colormap = random.choice(colormaps),random_state=random.randint(0,100)).generate_from_frequencies(gen_freq(df, kw, num=80))
+
+    plt.figure(figsize=(12, 8))
+    plt.imshow(wc, interpolation='bilinear')
+    plt.axis('off')
+    plt.show()
 
 
-
-
-
+#Popolarity and sentiment Plot

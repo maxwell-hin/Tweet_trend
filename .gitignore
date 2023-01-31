@@ -133,3 +133,5 @@ dmypy.json
 Tweet_trend.code-workspace
 
 outputs/pepsi_2022-06-01_2022-12-31.csv
+
+df4.csv
