@@ -10,12 +10,12 @@ def sum_tweets (df):
     total_retweets = df['Retweets'].sum() 
     return total_tweets, total_likes, total_comments, total_retweets
 
-scores = sum_tweets (pepsi)
-print(scores)
-print("Total tweets : "+ str(scores[0]))
-print("Total comments: "+ str(scores[1]))
-print("Total likes: "+ str(scores[2]))
-print("Total retweets: "+ str(scores[3]))
+# scores = sum_tweets (pepsi)
+# print(scores)
+# print("Total tweets : "+ str(scores[0]))
+# print("Total comments: "+ str(scores[1]))
+# print("Total likes: "+ str(scores[2]))
+# print("Total retweets: "+ str(scores[3]))
 
 def ratio_tweets (df):
     total_likes = df['Likes'].sum()
@@ -125,6 +125,7 @@ from textblob import TextBlob
 # import sys
 import nltk
 nltk.download('vader_lexicon')
+nltk.download('punkt')
 # import re
 # import string
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
@@ -159,6 +160,17 @@ rawdf = pepsi[['UserScreenName','UserName','Timestamp','Tweet URL']]
 df4 = pd.concat([emoji_sentdf,rawdf,score_df1], axis=1)
 print(df4.head())
 # print(df4.info())
+
+
+# =============NLTK
+from nltk.tokenize import word_tokenize
+para = "Hello everyone. It's good to see you. How are you doing?"
+words = word_tokenize(para)
+
+
+
+
+
 
 
 

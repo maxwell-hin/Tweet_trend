@@ -26,6 +26,7 @@ def keyword_hist(kw):
         kw_row = [elem for elem in row]
         kw_ls.append(kw_row[1])
         row = cursor.fetchone()
+    cursor.close()
     if kw in kw_ls:
         return True, kw_ls.index(kw)+1
     else:
@@ -44,27 +45,22 @@ def hist_date_range(kw_id):
                         WHERE keyword_id = {kw_id};    ''')
     row = cursor.fetchone()
     oldest_tweet = row[0].strftime("%Y-%m-%d")
+    cursor.close()
     return earliest_tweet, oldest_tweet
 
 #============insert data
 def tweet2query(df, kw_id):  
-    if pd.isna(df['Emojis']):
-        emojis_uc = 'NULL'
-    else: 
-        emojis_uc = str(df['Emojis'].encode('unicode-escape')).replace("'","''")
-
-    query = f'''INSERT INTO tweets (keyword_id, userscreenname, user_name, time_stamp, comments_no, likes_no, retweets_no, text_neg, text_neu, text_pos, text_comp, emoji_sent, tweet_url) VALUES (
+    query = f'''INSERT INTO tweets (keyword_id, user_name, time_stamp, comments_no, likes_no, retweets_no, text_neg, text_neu, text_pos, text_comp, emoji_sent, tweet_url) VALUES (
     {kw_id},
-    '{'NULL' if pd.isna(df.UserScreenName) else df.UserScreenName}',
     '{'NULL' if pd.isna(df.UserName) else df.UserName}',
     '{df.Timestamp}',
     {0 if pd.isna(df.Comments) else df.Comments},
     {0 if pd.isna(df.Likes) else df.Likes},
     {0 if pd.isna(df.Retweets) else df.Retweets},
-    {df['text_neg']},
-    {df['text_neu']},
-    {df['text_pos']},
-    {df['text_comp']},
+    {df['neg']},
+    {df['neu']},
+    {df['pos']},
+    {df['compound']},
     {df['emoji_sent']},
     '{df['Tweet URL']}'
     )'''
@@ -77,7 +73,14 @@ def update_records(df, kw_id):
     for lab, row in df.iterrows():
         query = tweet2query(row,kw_id)
         cursor.execute(query) 
-        cnxn.commit()   
+        cnxn.commit()
+        print('finish ',lab)
+    cursor.close()   
+
+bol, kw_id = keyword_hist('Pepsi')
+update_records(df, kw_id)
+
+df.iloc[34]
 
 def new_keywords(keyword):
     query = f'''INSERT INTO keywords (keyword)
@@ -86,6 +89,7 @@ def new_keywords(keyword):
     cursor = cnxn.cursor()
     cursor.execute(query) 
     cnxn.commit()
+    cursor.close()
 
 
 #======================Query data
