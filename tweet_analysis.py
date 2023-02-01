@@ -4,7 +4,15 @@ import numpy as np
 pepsi = pd.read_csv('./outputs/pepsi_2022-06-01_2022-12-31.csv')
 pepsi = pepsi.dropna(subset=['Embedded_text'])
 import nltk
-# nltk.download('vader_lexicon')
+from nltk.tokenize import word_tokenize
+from nltk.stem import PorterStemmer
+from nltk.corpus import stopwords
+from nltk.stem import WordNetLemmatizer
+from string import punctuation
+nltk.download('punkt')
+nltk.download('stopwords')
+nltk.download('wordnet')
+nltk.download('vader_lexicon')
 import matplotlib.pyplot as plt
 
 def sum_ratio_tweets (df):
@@ -29,6 +37,8 @@ def ratio_tweets (df):
     return total_likes, total_comments, total_retweets, likes_ratio, comments_ratio, retweets_ratio
 
 
+
+
 def max_tweets (df):
     max_cm = df['Comments'].max()
     max_likes = df['Likes'].max()
@@ -38,6 +48,8 @@ def max_tweets (df):
     url_retweets = df[df['Retweets'] == df['Retweets'].max()]['Tweet URL']
 
     return max_likes, max_cm, max_retweets,  url_likes, url_cm, url_retweets
+
+
 
 
 
@@ -95,18 +107,81 @@ def emo_list(raw_df):
                     emoji_list.append(score_each_tweets)
     return emoji_list
 
-            
+
+
+
+def tokenize_and_process(sentence, kw=None):
+    tokens = word_tokenize(sentence)
+    stemmer = PorterStemmer()
+    lemmatizer = WordNetLemmatizer()
+    stop_words = set(stopwords.words('english'))
+    forbidden_word = ['fuck','nigger','damn','shit']
+    meaningful_words = [lemmatizer.lemmatize(stemmer.stem(word.lower())) for word in tokens if word.lower() not in stop_words and word not in punctuation and word not in forbidden_word and word.isalpha() and word.encode("utf-8").isascii() and word != kw]
+    return meaningful_words
+
+
+
+
+def df_text_token2list(raw_df, kw=None):
+    words_list_list = []
+    for lab,row in raw_df.iterrows():
+        words_list_list.append(tokenize_and_process(row['Embedded_text'],kw))
+    word_list = []
+    for tw_word in words_list_list:
+        word_list.extend(tw_word)
+    return word_list
+
+def sent2token(sentence):
+    words = tokenize_and_process(sentence)
+    return words
+
+def create_wordls(raw_df):
+    text_ls = pd.DataFrame()
+    for lab,row in raw_df.iterrows():
+        text_chain = ','.join(sent2token(row['Embedded_text']))
+        text_ls = pd.concat([text_ls, pd.Series(text_chain)])
+    return text_ls
+create_wordls(pepsi)
+
+
+
+def gen_freq(raw_df, kw=None, num=20):
+    word_list = df_text_token2list(raw_df, kw=kw)
+    word_freq = pd.Series(word_list).value_counts()
+    return word_freq[:num]
+
+
+def tweet_words_tokenized(raw_df):
+
+
 
 def keyword_data(raw_df):
 
     from nltk.sentiment.vader import SentimentIntensityAnalyzer
     score_df_keyword = pd.DataFrame()
-    for keyword_text in df['Embedded_text']:
+    for keyword_text in raw_df['Embedded_text']:
       score = SentimentIntensityAnalyzer().polarity_scores(str(keyword_text))
       score_df=pd.DataFrame(score, index=[0])
       score_df_keyword = pd.concat([score_df_keyword,score_df])
     score_df1=score_df_keyword.reset_index(drop=True)
     return score_df1
+
+def emosent_df(keyword_list_emo):
+    emoji_sentdf = pd.DataFrame({'emoji_sent':emo_list(keyword_list_emo)})
+    # print(emoji_sentdf)
+    return emoji_sentdf
+
+
+def raw_user_df(raw_user_data):
+    rawdf = raw_user_data[['UserName','Timestamp','Tweet URL']]
+    # print(rawdf)
+    return rawdf
+
+def combine_df(lets_say_pepsi):
+    df4 = pd.concat([raw_user_df(lets_say_pepsi),emosent_df(lets_say_pepsi),keyword_data(lets_say_pepsi)], axis=1)
+    #print(df4.head())
+    # print(df4.info())
+    return print(df4)
 
 
 
@@ -124,41 +199,8 @@ def keyword_data(raw_df):
 # =============Visualization
 
 #word_cloud
-def tokenize_and_process(sentence, kw):
-    from nltk.tokenize import word_tokenize
-    from nltk.stem import PorterStemmer
-    from nltk.corpus import stopwords
-    from nltk.stem import WordNetLemmatizer
-    from string import punctuation
-    nltk.download('punkt')
-    nltk.download('stopwords')
-    nltk.download('wordnet')
-    tokens = word_tokenize(sentence)
-    stemmer = PorterStemmer()
-    lemmatizer = WordNetLemmatizer()
-    stop_words = set(stopwords.words('english'))
-    forbidden_word = ['fuck','nigger','damn','shit']
-    meaningful_words = [lemmatizer.lemmatize(stemmer.stem(word.lower())) for word in tokens if word.lower() not in stop_words and word not in punctuation and word not in forbidden_word and word.isalpha() and word.encode("utf-8").isascii() and word != kw]
-    return meaningful_words
 
 
-def word_token2list(df, kw):
-    words_list = []
-    for lab,row in df.iterrows():
-        words_list.append(tokenize_and_process(row['Embedded_text'],kw))
-    return words_list
-
-
-
-def gen_freq(df, kw, num=20):
-    words = []
-    word_list = word_token2list(df, kw)
-    for tw_word in word_list:
-        words.extend(tw_word)
-    word_freq = pd.Series(words).value_counts()
-    return word_freq[:num]
-
-# gen_freq(df, 'Pepsi')
 
 def word_cloud(df, kw ,num=80):
     from wordcloud import WordCloud
@@ -168,7 +210,7 @@ def word_cloud(df, kw ,num=80):
                       'tab20c']
     
     #Generate word cloud
-    wc = WordCloud(width=700, height=320, background_color='white', colormap = random.choice(colormaps),random_state=random.randint(0,100)).generate_from_frequencies(gen_freq(df, kw, num=80))
+    wc = WordCloud(width=700, height=320, background_color='white', colormap = random.choice(colormaps),random_state=random.randint(0,100)).generate_from_frequencies(gen_freq(df, kw=kw, num=80))
 
     plt.figure(figsize=(12, 8))
     plt.imshow(wc, interpolation='bilinear')
@@ -177,3 +219,11 @@ def word_cloud(df, kw ,num=80):
 
 
 #Popolarity and sentiment Plot
+
+
+
+
+
+
+
+

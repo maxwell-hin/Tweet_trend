@@ -40,7 +40,7 @@ US_geo = '41.4925374,-99.9018131,1500km'
 
 if __name__ == "__main__":
     #return keywords, knowing the date range
-    kw, num_kw, since, until = init_question()
+    kw, num_kw, since, until = init_question()2
     kw_ls = kw.split(',')
     compare_ls = []
     for word in kw_ls: #create df for analysis for each keywords and append to compare_ls
@@ -147,8 +147,8 @@ if __name__ == "__main__":
     #=Which tweets has maximum 
     for ind, word in enumerate(kw_ls):
         print(f'''Maximum number of likes for '{word}': {tw.max_tweets(compare_ls[ind])[0]}, {tw.max_tweets(compare_ls[ind])[3]}
-            Maximum number of likes for '{word}': {tw.max_tweets(compare_ls[ind])[1]}, {tw.max_tweets(compare_ls[ind])[4]}
-            Maximum number of likes for '{word}': {tw.max_tweets(compare_ls[ind])[2]}, {tw.max_tweets(compare_ls[ind])[5]}
+            Maximum number of comments for '{word}': {tw.max_tweets(compare_ls[ind])[1]}, {tw.max_tweets(compare_ls[ind])[4]}
+            Maximum number of retweets for '{word}': {tw.max_tweets(compare_ls[ind])[2]}, {tw.max_tweets(compare_ls[ind])[5]}
             ''') 
 
 
@@ -162,7 +162,7 @@ if __name__ == "__main__":
 
     
     #=popularity
-    
+
 
 
 
@@ -174,13 +174,13 @@ if __name__ == "__main__":
     if wordcloud_bool == 'y':
         for ind, word in enumerate(kw_ls):
             print(f"Wordcloud for '{word.capitalize()}'")
-            tw.word_cloud(compare_ls[ind])
+            tw.word_cloud(compare_ls[ind], kw ,word)
         regen_wc = input('Would you like to regenerate another wordcloud with other number of words?')
         while regen_wc == 'y':
             num_cmword = int(input("How many number of words you would like to show on the wordcloud? "))
             for ind, word in enumerate(kw_ls):
                 print(f"Wordcloud for '{word.capitalize()}'")
-                tw.word_cloud(compare_ls[ind],num_cmword)
+                tw.word_cloud(compare_ls[ind], kw ,num_cmword)
 
             regen_wc = input('Would you like to regenerate another wordcloud with other number of words?')
     
