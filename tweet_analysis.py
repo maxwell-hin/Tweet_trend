@@ -216,14 +216,61 @@ def word_cloud(df, kw ,num=80):
     plt.imshow(wc, interpolation='bilinear')
     plt.axis('off')
     plt.show()
-
-
 #Popolarity and sentiment Plot
+df5 = df4.copy()
+import datetime
+def removetime1 (df):
+    df['Timestamp'] = pd.to_datetime(df['Timestamp']).dt.date
+    return df['Timestamp']
 
+remove_time1 = removetime1(df5)
+df5['Timestamp'] = remove_time1
+print(remove_time1)
+print(df5)
+# print(df5.info())
+def popularity_score (df):
+    total_tweets = len(df) 
+    total_likes = df['Likes'].sum() 
+    total_comments = df['Comments'].sum()
+    total_retweets = df['Retweets'].sum() 
+    total_scores = total_tweets*0.5 + total_likes*0.1 + total_comments*0.2 + total_retweets*0.2
+    return total_scores
 
+score_pop = popularity_score (df5)
+print("Total Scores:", score_pop)
 
+def daily_popularity_score (df):
+    daily_sum_tweets = df.groupby('Timestamp').apply(popularity_score)
+    return daily_sum_tweets
 
+daily_popularity_score = daily_popularity_score(df5)
+print(daily_popularity_score)
 
-
-
-
+def sentiment_score (df):
+    compound_score = df[['Timestamp','compound']]
+    daily_sum_score = pd.merge(compound_score,emoji_sentdf,left_index=True, right_index=True, how='outer')
+    daily_sum_score['sum'] = daily_sum_score['compound'] + daily_sum_score['emoji_sent']
+    daily_sentiment_score = daily_sum_score.groupby('Timestamp').sum()
+    daily_sentiment_score = daily_sentiment_score.set_index('Timestamp')
+    sentiment_score = daily_sentiment_score['sum']
+    sentiment_score
+    return sentiment_score
+sentiment_score = sentiment_score (df5)
+print(sentiment_score)
+def normalized (df):
+    normalized_df=(df-df.min())/(df.max()-df.min())
+    return normalized_df
+normalized_popularity_score = normalized(daily_popularity_score)
+normalized_popularity_score
+normalized_sentiment_score = normalized(sentiment_score)
+normalized_sentiment_score.index
+x = normalized_sentiment_score.index
+y = normalized_popularity_score
+z = normalized_sentiment_score
+plt.figure()
+plt.subplot(121)
+plt.plot(x, y, color="orange", marker="*")
+ 
+plt.subplot(122)
+plt.plot(x, z, color="yellow", marker="*")
+plt.show()
