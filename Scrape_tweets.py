@@ -137,11 +137,59 @@ if __name__ == "__main__":
     #Visualization 
     #=show the summary for each keywords enter
     for ind, word in enumerate(kw_ls):
+        print(f'''Summary for {word}:
+            Total no. of tweets: {tw.sum_tweets(compare_ls[ind][0])}
+            Total no. of likes: {tw.sum_tweets(compare_ls[ind][1])}
+            Total no. of comments: {tw.sum_tweets(compare_ls[ind][2])}
+            Total no. of retweets: {tw.sum_tweets(compare_ls[ind][3])}
+            ''')
         
+    #=Which tweets has maximum 
+    for ind, word in enumerate(kw_ls):
+        print(f'''Maximum number of likes for '{word}': {tw.max_tweets(compare_ls[ind])[0]}, {tw.max_tweets(compare_ls[ind])[3]}
+            Maximum number of likes for '{word}': {tw.max_tweets(compare_ls[ind])[1]}, {tw.max_tweets(compare_ls[ind])[4]}
+            Maximum number of likes for '{word}': {tw.max_tweets(compare_ls[ind])[2]}, {tw.max_tweets(compare_ls[ind])[5]}
+            ''') 
+
+
     #=ratio
-    #=show the ratio for each keywords enter
+    for ind, word in enumerate(kw_ls):
+        print(f'''CLS Ratio for {word}:
+            Total no. of likes: {tw.ratio_tweets(compare_ls[ind][3])}
+            Total no. of comments: {tw.ratio_tweets(compare_ls[ind][4])}
+            Total no. of retweets: {tw.ratio_tweets(compare_ls[ind][5])}
+            ''')
+
+    
     #=popularity
-    #=wordcloud        
+    
+
+
+
+    #=wordcloud
+    for ind, word in enumerate(kw_ls):   
+        print(f'{word.capitalize()} has the following common words:/n{tw.gen_freq((compare_ls[ind],kw))}')   
+
+    wordcloud_bool = input('Would you like to show word cloud[y/n]? ')
+    if wordcloud_bool == 'y':
+        for ind, word in enumerate(kw_ls):
+            print(f"Wordcloud for '{word.capitalize()}'")
+            tw.word_cloud(compare_ls[ind])
+        regen_wc = input('Would you like to regenerate another wordcloud with other number of words?')
+        while regen_wc == 'y':
+            num_cmword = int(input("How many number of words you would like to show on the wordcloud? "))
+            for ind, word in enumerate(kw_ls):
+                print(f"Wordcloud for '{word.capitalize()}'")
+                tw.word_cloud(compare_ls[ind],num_cmword)
+
+            regen_wc = input('Would you like to regenerate another wordcloud with other number of words?')
+    
+    print('Tweet_app end')
+        
+            
+
+
+    
 
 
 
