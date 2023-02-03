@@ -1,8 +1,8 @@
 import pandas as pd
 import datetime
 import numpy as np
-pepsi = pd.read_csv('./outputs/pepsi_2022-06-01_2022-12-31.csv')
-pepsi = pepsi.dropna(subset=['Embedded_text'])
+# pepsi = pd.read_csv('./outputs/pepsi_2022-06-01_2022-12-31.csv')
+# pepsi.dropna(subset=['Embedded_text', 'Emojis'], how='all', inplace = True)
 import nltk
 from nltk.tokenize import word_tokenize
 from nltk.stem import PorterStemmer
@@ -53,36 +53,47 @@ def max_tweets (df):
 
 
 
-def removetime (df):
-    df['Timestamp'] = pd.to_datetime(df['Timestamp']).dt.date
-    groupbytimestamp =  df['Timestamp'].reset_index()
-    groupbytimestamp = df.groupby(['Timestamp']).size()
-
-    return groupbytimestamp
 
 
 
 
 
-
-# import matplotlib.pyplot as plt
-
-
-# fig, ax = plt.subplots()
-# tweets_per_day.plot(kind='line', ax=ax)
-# ax.set_xticklabels(tweets_per_day.index.strftime('%y-%m-%d'))
-
-# tweets_per_day.plot(kind='line')
-# plt.ylabel('Number of tweets')
-# plt.xlabel('Timestamp')
-# plt.title('Tweets per day')
-# plt.show()
+def tokenize_and_process(sentence, kw=None):
+    tokens = word_tokenize(sentence)
+    stemmer = PorterStemmer()
+    lemmatizer = WordNetLemmatizer()
+    stop_words = set(stopwords.words('english'))
+    forbidden_word = ['fuck','nigger','damn','shit','Replying', 'replying','reply']
+    meaningful_words = [lemmatizer.lemmatize(stemmer.stem(word.lower())) for word in tokens if word.lower() not in stop_words and word not in punctuation and word not in forbidden_word and word.isalpha() and word.encode("utf-8").isascii() and word != kw]
+    return meaningful_words
 
 
 
 
-    
-def emo_list(raw_df):
+def df_text_token2list(raw_df, kw=None):
+    words_list_list = []
+    for lab,row in raw_df.iterrows():
+        try:
+            words_list_list.append(tokenize_and_process(row['Embedded_text'],kw))
+        except: 
+            words_list_list.append(None)
+    word_list = []
+    for tw_word in words_list_list:
+        word_list.extend(tw_word)
+    return word_list
+
+
+def gen_freq(raw_df, kw=None, num=20):
+    word_list = df_text_token2list(raw_df, kw=kw)
+    word_freq = pd.Series(word_list).value_counts()
+    return word_freq[:num]
+
+
+
+
+
+#======Tranforming raw to trans_df
+def emo_sent_score(raw_df):
     from emosent_py.emosent_b.emosent import get_emoji_sentiment_rank
     emoji_list = []
     for lab, row in raw_df.iterrows():
@@ -107,83 +118,69 @@ def emo_list(raw_df):
                     emoji_list.append(score_each_tweets)
     return emoji_list
 
-
-
-
-def tokenize_and_process(sentence, kw=None):
-    tokens = word_tokenize(sentence)
-    stemmer = PorterStemmer()
-    lemmatizer = WordNetLemmatizer()
-    stop_words = set(stopwords.words('english'))
-    forbidden_word = ['fuck','nigger','damn','shit']
-    meaningful_words = [lemmatizer.lemmatize(stemmer.stem(word.lower())) for word in tokens if word.lower() not in stop_words and word not in punctuation and word not in forbidden_word and word.isalpha() and word.encode("utf-8").isascii() and word != kw]
-    return meaningful_words
-
-
-
-
-def df_text_token2list(raw_df, kw=None):
-    words_list_list = []
-    for lab,row in raw_df.iterrows():
-        words_list_list.append(tokenize_and_process(row['Embedded_text'],kw))
-    word_list = []
-    for tw_word in words_list_list:
-        word_list.extend(tw_word)
-    return word_list
-
 def sent2token(sentence):
     words = tokenize_and_process(sentence)
     return words
 
-def create_wordls(raw_df):
-    text_ls = pd.DataFrame()
-    for lab,row in raw_df.iterrows():
-        text_chain = ','.join(sent2token(row['Embedded_text']))
-        text_ls = pd.concat([text_ls, pd.Series(text_chain)])
-    return text_ls
-create_wordls(pepsi)
-
-
-
-def gen_freq(raw_df, kw=None, num=20):
-    word_list = df_text_token2list(raw_df, kw=kw)
-    word_freq = pd.Series(word_list).value_counts()
-    return word_freq[:num]
-
-
-def tweet_words_tokenized(raw_df):
-
-
-
-def keyword_data(raw_df):
-
+def keyword_sent_score(raw_df):
     from nltk.sentiment.vader import SentimentIntensityAnalyzer
     score_df_keyword = pd.DataFrame()
     for keyword_text in raw_df['Embedded_text']:
-      score = SentimentIntensityAnalyzer().polarity_scores(str(keyword_text))
-      score_df=pd.DataFrame(score, index=[0])
-      score_df_keyword = pd.concat([score_df_keyword,score_df])
-    score_df1=score_df_keyword.reset_index(drop=True)
-    return score_df1
+        try:
+            token_join = ' '.join(sent2token(keyword_text))
+            score = SentimentIntensityAnalyzer().polarity_scores(keyword_text)
+        except: 
+            score = SentimentIntensityAnalyzer().polarity_scores('') 
+        score_df=pd.DataFrame(score, index=[0])
+        score_df_keyword = pd.concat([score_df_keyword,score_df])
+    score_df_keyword=score_df_keyword.reset_index(drop=True)
+    return score_df_keyword
 
-def emosent_df(keyword_list_emo):
-    emoji_sentdf = pd.DataFrame({'emoji_sent':emo_list(keyword_list_emo)})
+
+def emosent_df(raw_df):
+    emoji_sentdf = pd.DataFrame({'emoji_sent':emo_sent_score(raw_df)})
     # print(emoji_sentdf)
     return emoji_sentdf
 
+def check_object(col):
+    if col.dtype == 'O': #object
+        col = col.str.replace(',','')
+    return col
 
-def raw_user_df(raw_user_data):
-    rawdf = raw_user_data[['UserName','Timestamp','Tweet URL']]
+
+def raw_user_df(raw_df):
+    tweet_raw_col = raw_df[['UserName','Tweet URL','Timestamp','Comments','Likes','Retweets']]
+    #confirm dtype of cls and remove strange symbols
+    tweet_raw_col = tweet_raw_col.assign(Comments=check_object(tweet_raw_col.loc[:,'Comments']))
+    tweet_raw_col = tweet_raw_col.assign(Likes=check_object(tweet_raw_col.loc[:,'Likes']))
+    tweet_raw_col = tweet_raw_col.assign(Retweets=check_object(tweet_raw_col.loc[:,'Retweets']))
+    tweet_raw_col = tweet_raw_col.reset_index(drop=True)
     # print(rawdf)
-    return rawdf
+    return tweet_raw_col
 
-def combine_df(lets_say_pepsi):
-    df4 = pd.concat([raw_user_df(lets_say_pepsi),emosent_df(lets_say_pepsi),keyword_data(lets_say_pepsi)], axis=1)
+
+
+def create_wordls(raw_df):
+    text_ls = pd.DataFrame()
+    for lab,row in raw_df.iterrows():
+        try:
+            text_chain = ','.join(sent2token(row['Embedded_text']))
+        except: text_chain = ''
+        text_ls = pd.concat([text_ls, pd.Series(text_chain)])
+    text_ls = pd.DataFrame(text_ls).reset_index(drop=True)
+    text_ls.columns = ['word_token']
+    return text_ls
+
+
+
+def combine_df(raw_df):
+    trans_df = pd.concat([raw_user_df(raw_df),emosent_df(raw_df),keyword_sent_score(raw_df),create_wordls(raw_df)],axis=1)
     #print(df4.head())
     # print(df4.info())
-    return print(df4)
+    return trans_df
 
 
+# trans_df = combine_df(raw_df)
 
 # emoji_sentdf = pd.DataFrame({'emoji_sent':emoji_list})
 # print(emoji_sentdf)
@@ -217,16 +214,25 @@ def word_cloud(df, kw ,num=80):
     plt.axis('off')
     plt.show()
 #Popolarity and sentiment Plot
-df5 = df4.copy()
-import datetime
+# df5 = df4.copy()
+
 def removetime1 (df):
     df['Timestamp'] = pd.to_datetime(df['Timestamp']).dt.date
     return df['Timestamp']
 
-remove_time1 = removetime1(df5)
-df5['Timestamp'] = remove_time1
-print(remove_time1)
-print(df5)
+
+
+#need==============
+# remove_time1 = removetime1(df5)
+# df5['Timestamp'] = remove_time1
+# print(remove_time1)
+# print(df5)
+
+
+
+
+
+
 # print(df5.info())
 def popularity_score (df):
     total_tweets = len(df) 
@@ -236,15 +242,19 @@ def popularity_score (df):
     total_scores = total_tweets*0.5 + total_likes*0.1 + total_comments*0.2 + total_retweets*0.2
     return total_scores
 
-score_pop = popularity_score (df5)
-print("Total Scores:", score_pop)
+
+#need==============
+# score_pop = popularity_score (df5)
+# print("Total Scores:", score_pop)
 
 def daily_popularity_score (df):
     daily_sum_tweets = df.groupby('Timestamp').apply(popularity_score)
     return daily_sum_tweets
 
-daily_popularity_score = daily_popularity_score(df5)
-print(daily_popularity_score)
+
+#need==============
+# daily_popularity_score = daily_popularity_score(df5)
+# print(daily_popularity_score)
 
 def sentiment_score (df):
     compound_score = df[['Timestamp','compound']]
@@ -255,22 +265,31 @@ def sentiment_score (df):
     sentiment_score = daily_sentiment_score['sum']
     sentiment_score
     return sentiment_score
-sentiment_score = sentiment_score (df5)
-print(sentiment_score)
+
+#need==============
+# sentiment_score = sentiment_score (df5)
+# print(sentiment_score)
+
+
+
+
 def normalized (df):
     normalized_df=(df-df.min())/(df.max()-df.min())
     return normalized_df
-normalized_popularity_score = normalized(daily_popularity_score)
-normalized_popularity_score
-normalized_sentiment_score = normalized(sentiment_score)
-normalized_sentiment_score.index
-x = normalized_sentiment_score.index
-y = normalized_popularity_score
-z = normalized_sentiment_score
-plt.figure()
-plt.subplot(121)
-plt.plot(x, y, color="orange", marker="*")
+
+
+#need==============
+# normalized_popularity_score = normalized(daily_popularity_score)
+# normalized_popularity_score
+# normalized_sentiment_score = normalized(sentiment_score)
+# normalized_sentiment_score.index
+# x = normalized_sentiment_score.index
+# y = normalized_popularity_score
+# z = normalized_sentiment_score
+# plt.figure()
+# plt.subplot(121)
+# plt.plot(x, y, color="orange", marker="*")
  
-plt.subplot(122)
-plt.plot(x, z, color="yellow", marker="*")
-plt.show()
+# plt.subplot(122)
+# plt.plot(x, z, color="yellow", marker="*")
+# plt.show()

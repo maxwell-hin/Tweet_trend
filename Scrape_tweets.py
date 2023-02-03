@@ -25,8 +25,9 @@ def run_scrape(words, since, until,interval,geocode):
     data = scrape(words=words, since=since, until=until, from_account=None, interval=interval,
                   headless=False, display_type="Latest", save_images=False, lang="en",
                   resume=False, filter_replies=False, proximity=False, limit=float('inf'), geocode=geocode)
-    data.dropna(subset=['Embedded_text'],inplace=True)
+    data.dropna(subset=['Embedded_text', 'Emojis'], how='all', inplace = True)
     return data
+data = pd.read_csv('./outputs/pepsi_2022-06-01_2022-12-31.csv')
 
 
 # tic = time.time()
@@ -40,7 +41,7 @@ US_geo = '41.4925374,-99.9018131,1500km'
 
 if __name__ == "__main__":
     #return keywords, knowing the date range
-    kw, num_kw, since, until = init_question()2
+    kw, num_kw, since, until = init_question()
     kw_ls = kw.split(',')
     compare_ls = []
     for word in kw_ls: #create df for analysis for each keywords and append to compare_ls
@@ -61,10 +62,10 @@ if __name__ == "__main__":
             elif datetime.strptime(hist_start, '%Y-%m-%d')>datetime.strptime(since, '%Y-%m-%d') and datetime.strptime(hist_end, '%Y-%m-%d')>=datetime.strptime(until, '%Y-%m-%d'):
                 
                 #scrape data
-                data = run_scrape(word = kw, since=since, until=hist_start, interval = 3, geocode=US_geo)       
+                data = run_scrape(word = word, since=since, until=hist_start, interval = 3, geocode=US_geo)       
                 
                 #Transform
-                
+                trans_data = tw.combine_df(data)
                 
                 
                 #upload to db
@@ -85,10 +86,10 @@ if __name__ == "__main__":
             elif datetime.strptime(hist_end, '%Y-%m-%d')<=datetime.strptime(since, '%Y-%m-%d') or datetime.strptime(hist_start, '%Y-%m-%d')>=datetime.strptime(until, '%Y-%m-%d'):     
 
                 #scrape data
-                data = run_scrape(word = kw, since=since, until=until, interval = 3, geocode=US_geo)   
+                data = run_scrape(word = word, since=since, until=until, interval = 3, geocode=US_geo)   
                 
                 #Transform
-                
+                trans_data = tw.combine_df(data)
                 
                 
                 #upload to db
@@ -99,14 +100,14 @@ if __name__ == "__main__":
             #====both outside
             else:
                 #scrape data
-                data = run_scrape(word = kw, since=since, until=hist_start, interval = 3, geocode=US_geo)
+                data = run_scrape(word = word, since=since, until=hist_start, interval = 3, geocode=US_geo)
                 
                 data_2 = run_scrape(word = kw, since=hist_end, until=until, interval = 3, geocode=US_geo)         
                 
                 data = pd.concat([data, data_2], reset_index=True)
                 
                 #Transform
-                
+                trans_data = tw.combine_df(data)
                 
                 
                 #upload to db
@@ -118,9 +119,14 @@ if __name__ == "__main__":
         else:#if kw has not been search      
             
             #scrape data
-            data = run_scrape(word = kw, since=since, until=hist_start, interval = 3, geocode=US_geo)
+            data = run_scrape(word = word, since=since, until=hist_start, interval = 3, geocode=US_geo)
+            
+            #update new keyword to db
+            az.new_keywords(word)
+            
             
             #Transform
+            trans_data = tw.combine_df(data)
                 
                 
                 

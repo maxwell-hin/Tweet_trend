@@ -18,7 +18,7 @@ def connect_asql():
 def keyword_hist(kw):
     cnxn = connect_asql()
     cursor = cnxn.cursor()
-    cursor.execute('SELECT * FROM keywords')
+    cursor.execute('SELECT * FROM jde.keywords')
     kw_ls = []
     row = cursor.fetchone() 
     while row: 
@@ -37,11 +37,11 @@ def keyword_hist(kw):
 def hist_date_range(kw_id):
     cnxn = connect_asql()
     cursor = cnxn.cursor()
-    cursor.execute(f'''SELECT max(time_stamp) FROM tweets
+    cursor.execute(f'''SELECT max(time_stamp) FROM jde.tweets
                         WHERE keyword_id = {kw_id};    ''')
     row = cursor.fetchone()
     earliest_tweet = row[0].strftime("%Y-%m-%d")
-    cursor.execute(f'''SELECT min(time_stamp) FROM tweets
+    cursor.execute(f'''SELECT min(time_stamp) FROM jde.tweets
                         WHERE keyword_id = {kw_id};    ''')
     row = cursor.fetchone()
     oldest_tweet = row[0].strftime("%Y-%m-%d")
@@ -50,22 +50,26 @@ def hist_date_range(kw_id):
 
 #============insert data
 def tweet2query(df, kw_id):  
-    query = f'''INSERT INTO tweets (keyword_id, user_name, time_stamp, comments_no, likes_no, retweets_no, text_neg, text_neu, text_pos, text_comp, emoji_sent, tweet_url) VALUES (
+    query = '''INSERT INTO jde.tweets (keyword_id, user_name, time_stamp, comments_no, likes_no, retweets_no, word_token, text_neg, text_neu, text_pos, text_comp, emoji_sent, tweet_url) VALUES (
     {kw_id},
-    '{'NULL' if pd.isna(df.UserName) else df.UserName}',
-    '{df.Timestamp}',
-    {0 if pd.isna(df.Comments) else df.Comments},
-    {0 if pd.isna(df.Likes) else df.Likes},
-    {0 if pd.isna(df.Retweets) else df.Retweets},
-    {df['neg']},
-    {df['neu']},
-    {df['pos']},
-    {df['compound']},
-    {df['emoji_sent']},
-    '{df['Tweet URL']}'
-    )'''
-    return query
+    {username},
+    '{timestamp}',
+    {comment},
+    {like},
+    {retweet},
+    {word_token},
+    {text_neg},
+    {text_neu},
+    {text_pos},
+    {text_compound},
+    {emoji_sent},
+    '{tweet_url}'
+    );'''
+    return query.format(kw_id=kw_id, username = 'NULL' if pd.isna(df.UserName) else "'"+df.UserName+"'", timestamp = df.Timestamp,comment = 0 if pd.isna(df.Comments) else df.Comments, like = 0 if pd.isna(df.Likes) else df.Likes, retweet = 0 if pd.isna(df.Retweets) else df.Retweets, word_token = 'NULL' if df['word_token'] == '' else "'"+df['word_token']+"'",text_neg = df['neg'], text_neu = df['neu'],text_pos =df['pos'],text_compound = df['compound'], emoji_sent = df['emoji_sent'], tweet_url = df['Tweet URL'])
 
+trans_df.iloc[1234]['Retweets']
+
+print(tweet2query(trans_df.iloc[1234],2))
 
 def update_records(df, kw_id):
     cnxn = connect_asql()
@@ -75,15 +79,12 @@ def update_records(df, kw_id):
         cursor.execute(query) 
         cnxn.commit()
         print('finish ',lab)
-    cursor.close()   
+    cursor.close()
+    print('update finished')   
 
-bol, kw_id = keyword_hist('Pepsi')
-update_records(df, kw_id)
-
-df.iloc[34]
 
 def new_keywords(keyword):
-    query = f'''INSERT INTO keywords (keyword)
+    query = f'''INSERT INTO jde.keywords (keyword)
     VALUES (keyword);'''
     cnxn = connect_asql()
     cursor = cnxn.cursor()
@@ -95,7 +96,7 @@ def new_keywords(keyword):
 #======================Query data
 
 def download_from_db(kw_id, since, until):
-    query = f"SELECT * FROM tweets WHERE keyword_id = {kw_id};"
+    query = f"SELECT * FROM jde.tweets WHERE keyword_id = {kw_id};"
     cnxn = connect_asql()
     cursor = cnxn.cursor()
     cursor.execute(query)
