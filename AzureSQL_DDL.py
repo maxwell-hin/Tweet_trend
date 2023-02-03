@@ -67,9 +67,9 @@ def tweet2query(df, kw_id):
     );'''
     return query.format(kw_id=kw_id, username = 'NULL' if pd.isna(df.UserName) else "'"+df.UserName+"'", timestamp = df.Timestamp,comment = 0 if pd.isna(df.Comments) else df.Comments, like = 0 if pd.isna(df.Likes) else df.Likes, retweet = 0 if pd.isna(df.Retweets) else df.Retweets, word_token = 'NULL' if df['word_token'] == '' else "'"+df['word_token']+"'",text_neg = df['neg'], text_neu = df['neu'],text_pos =df['pos'],text_compound = df['compound'], emoji_sent = df['emoji_sent'], tweet_url = df['Tweet URL'])
 
-trans_df.iloc[1234]['Retweets']
+# trans_df.iloc[1234]['Retweets']
 
-print(tweet2query(trans_df.iloc[1234],2))
+# print(tweet2query(trans_df.iloc[1234],2))
 
 def update_records(df, kw_id):
     cnxn = connect_asql()
