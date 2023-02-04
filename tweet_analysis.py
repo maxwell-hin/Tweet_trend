@@ -283,13 +283,21 @@ def normalized (df):
 # normalized_popularity_score
 # normalized_sentiment_score = normalized(sentiment_score)
 # normalized_sentiment_score.index
-# x = normalized_sentiment_score.index
-# y = normalized_popularity_score
-# z = normalized_sentiment_score
-# plt.figure()
-# plt.subplot(121)
-# plt.plot(x, y, color="orange", marker="*")
- 
-# plt.subplot(122)
-# plt.plot(x, z, color="yellow", marker="*")
-# plt.show()
+
+
+
+def plot (sentiment_score, daily_popularity_score):
+    x = sentiment_score.index
+    y = daily_popularity_score
+    z = sentiment_score
+    
+    plt.figure()
+    plt.subplot(121)
+    plt.plot(x, y, color="orange", marker="*")
+
+    plt.subplot(122)
+    plt.plot(x, z, color="green", marker="*")
+    plt.show()
+
+#need==============
+# plot_sentiment_and_popularity = plot(sentiment_score, daily_popularity_score)
