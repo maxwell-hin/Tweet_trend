@@ -8,3 +8,4 @@ urllib3
 pyodbc
 nltk
 matplotlib
+wordcloud

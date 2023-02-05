@@ -15,45 +15,13 @@ nltk.download('wordnet')
 nltk.download('vader_lexicon')
 import matplotlib.pyplot as plt
 
-def sum_ratio_tweets (df):
-    total_tweets = len(df) 
-    total_likes = df['Likes'].sum() 
-    total_comments = df['Comments'].sum()
-    total_retweets = df['Retweets'].sum() 
-    return total_tweets, total_likes, total_comments, total_retweets
-
-
-
-def ratio_tweets (df):
-    total_likes = df['Likes'].sum()
-    total_comments = df['Comments'].sum()
-    total_retweets = df['Retweets'].sum()
-    total_scores = total_likes + total_comments + total_retweets
-    if total_scores == 0:
-        return 0, 0, 0, 0, 0, 0, 0
-    likes_ratio = total_likes/total_scores
-    comments_ratio = total_comments/total_scores
-    retweets_ratio = total_retweets/total_scores
-    return total_likes, total_comments, total_retweets, likes_ratio, comments_ratio, retweets_ratio
-
-
-
-
-def max_tweets (df):
-    max_cm = df['Comments'].max()
-    max_likes = df['Likes'].max()
-    max_retweets = df['Retweets'].max()
-    url_cm = df[df['Comments'] == df['Comments'].max()]['Tweet URL']
-    url_likes = df[df['Likes'] == df['Likes'].max()]['Tweet URL']
-    url_retweets = df[df['Retweets'] == df['Retweets'].max()]['Tweet URL']
-
-    return max_likes, max_cm, max_retweets,  url_likes, url_cm, url_retweets
 
 
 
 
 
 
+#=================Sentiment Analysis
 
 
 
@@ -137,6 +105,10 @@ def keyword_sent_score(raw_df):
     return score_df_keyword
 
 
+
+
+#===================Transform to trans_df
+
 def emosent_df(raw_df):
     emoji_sentdf = pd.DataFrame({'emoji_sent':emo_sent_score(raw_df)})
     # print(emoji_sentdf)
@@ -194,6 +166,45 @@ def combine_df(raw_df):
 
 
 # =============Visualization
+
+
+
+def sum_ratio_tweets (df):
+    total_tweets = len(df) 
+    total_likes = df['Likes'].sum() 
+    total_comments = df['Comments'].sum()
+    total_retweets = df['Retweets'].sum() 
+    return total_tweets, total_likes, total_comments, total_retweets
+
+
+
+def ratio_tweets (df):
+    total_likes = df['Likes'].sum()
+    total_comments = df['Comments'].sum()
+    total_retweets = df['Retweets'].sum()
+    total_scores = total_likes + total_comments + total_retweets
+    if total_scores == 0:
+        return 0, 0, 0, 0, 0, 0, 0
+    likes_ratio = total_likes/total_scores
+    comments_ratio = total_comments/total_scores
+    retweets_ratio = total_retweets/total_scores
+    return total_likes, total_comments, total_retweets, likes_ratio, comments_ratio, retweets_ratio
+
+
+
+
+def max_tweets (df):
+    max_cm = df['Comments'].max()
+    max_likes = df['Likes'].max()
+    max_retweets = df['Retweets'].max()
+    url_cm = df[df['Comments'] == df['Comments'].max()]['Tweet URL']
+    url_likes = df[df['Likes'] == df['Likes'].max()]['Tweet URL']
+    url_retweets = df[df['Retweets'] == df['Retweets'].max()]['Tweet URL']
+
+    return max_likes, max_cm, max_retweets,  url_likes, url_cm, url_retweets
+
+
+
 
 #word_cloud
 
