@@ -20,7 +20,10 @@ import matplotlib.pyplot as plt
 
 
 raw_df = pd.read_csv("./outputs/McDonald's_2022-06-01_2022-12-31.csv", index_col=0)
-raw_df 
+df = raw_df.iloc[:100].copy()
+df["Comments"] = df['Comments'].astype("int")
+df.info()
+
 
 
 
@@ -127,7 +130,7 @@ def check_object(col):
 
 
 def raw_user_df(raw_df):
-    tweet_raw_col = raw_df[['UserName','Tweet URL','Timestamp','Comments','Likes','Retweets','Quotes']]
+    tweet_raw_col = raw_df[['Username','Tweet URL','Timestamp','Comments','Likes','Retweets','Quotes']]
     #confirm dtype of cls and remove strange symbols
     tweet_raw_col = tweet_raw_col.assign(Comments=check_object(tweet_raw_col.loc[:,'Comments']))
     tweet_raw_col = tweet_raw_col.assign(Likes=check_object(tweet_raw_col.loc[:,'Likes']))
@@ -137,6 +140,7 @@ def raw_user_df(raw_df):
     # print(rawdf)
     return tweet_raw_col
 
+# raw_user_df(df)
 
 
 def create_wordls(raw_df):
@@ -174,6 +178,7 @@ def combine_df(raw_df):
 
 # =============Visualization
 
+def clean_data(df):
 
 
 def sum_ratio_tweets (df):
@@ -184,7 +189,8 @@ def sum_ratio_tweets (df):
     total_quotes = df['Quotes'].sum()
     return total_tweets, total_likes, total_comments, total_retweets, total_quotes
 
-
+# test = sum_ratio_tweets (df)
+# test
 
 def ratio_tweets (df):
     total_likes = df['Likes'].sum()
@@ -198,9 +204,10 @@ def ratio_tweets (df):
     comments_ratio = total_comments/total_scores
     retweets_ratio = total_retweets/total_scores
     quotes_ratio = total_quotes/total_scores
-    return total_likes, total_comments, total_retweets, likes_ratio, comments_ratio, retweets_ratio, quotes_ratio
+    return total_likes, total_comments, total_retweets, total_quotes, likes_ratio, comments_ratio, retweets_ratio, quotes_ratio
 
-
+# test = ratio_tweets (df)
+# test
 
 
 def max_tweets (df):
@@ -213,9 +220,10 @@ def max_tweets (df):
     url_retweets = df[df['Retweets'] == df['Retweets'].max()]['Tweet URL']
     url_quotes = df[df['Quotes'] == df['Quotes'].max()]['Tweet URL']
 
-    return max_likes, max_cm, max_retweets, max_quotes, url_likes, url_cm, url_retweets, url_quotes
+    return [max_likes, max_cm, max_retweets, max_quotes, url_likes, url_cm, url_retweets, url_quotes]
 
-
+# test = max_tweets (df)
+# test
 
 
 #word_cloud
@@ -268,8 +276,9 @@ def popularity_score (df):
 
 
 #need==============
-# score_pop = popularity_score (df5)
+# score_pop = popularity_score(df)
 # print("Total Scores:", score_pop)
+
 
 def daily_popularity_score (df):
     daily_sum_tweets = df.groupby('Timestamp').apply(popularity_score)
