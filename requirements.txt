@@ -9,3 +9,4 @@ pyodbc
 nltk
 matplotlib
 wordcloud
+advertools

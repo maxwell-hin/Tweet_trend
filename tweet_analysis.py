@@ -178,7 +178,7 @@ def combine_df(raw_df):
 
 # =============Visualization
 
-def clean_data(df):
+# def clean_data(df):
 
 
 def sum_ratio_tweets (df):
@@ -226,7 +226,7 @@ def max_tweets (df):
 # test
 
 
-#word_cloud
+#word_cloud123
 
 
 
