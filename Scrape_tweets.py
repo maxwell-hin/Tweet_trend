@@ -1,11 +1,11 @@
 import pandas as pd
 # from Scweet_master.Scweet.scweet import scrape
-import time
-import AzureSQL_DDL as az
+import tools.tweet_analysis as tw
+import tools.AzureSQL_DDL as az
+import tools.preprocessing as pp
 from datetime import datetime
-import tweet_analysis as tw
+import time
 import re
-import pandas as pd
 import snscrape.modules.twitter as sntwitter
 
 def init_question():
@@ -66,7 +66,7 @@ def snscraperper(text,since, until, interval=3):
 #                   resume=False, filter_replies=False, proximity=False, limit=float('inf'), geocode=geocode)
 #     data.dropna(subset=['Embedded_text', 'Emojis'], how='all', inplace = True)
 #     return data
-data = pd.read_csv("./McDonald's_2022-06-01_2022-12-31.csv")
+# data = pd.read_csv("./McDonald's_2022-06-01_2022-12-31.csv")
 
 
 # tic = time.time()
@@ -104,6 +104,7 @@ if __name__ == "__main__":
                 #scrape & clean
                 # data = run_scrape(word = word, since=since, until=hist_start, interval = 3, geocode=US_geo)       
                 data = snscraperper(word, since=since, until=hist_start)
+                data = pp.clean_df(data)
 
                 #Transform
                 trans_data = tw.combine_df(data)
@@ -129,6 +130,7 @@ if __name__ == "__main__":
                 #scrape & clean
                 # data = run_scrape(word = word, since=since, until=until, interval = 3, geocode=US_geo)   
                 data = snscraperper(word, since=since, until=until)
+                data = pp.clean_df(data)
 
 
                 #Transform
@@ -148,7 +150,8 @@ if __name__ == "__main__":
                 # data_2 = run_scrape(word = kw, since=hist_end, until=until, interval = 3, geocode=US_geo)         
                 data_2 = snscraperper(word, since=hist_end+1, until=until)
                 data = pd.concat([data_1, data_2], reset_index=True)
-                
+                data = pp.clean_df(data)
+
                 #Transform
                 trans_data = tw.combine_df(data)
                 
@@ -165,6 +168,7 @@ if __name__ == "__main__":
             #scrape & clean
             # data = run_scrape(word = word, since=since, until=hist_start, interval = 3, geocode=US_geo)
             data = snscraperper(word, since=since, until=until)
+            data = pp.clean_df(data)
 
             #update new keyword to db
             az.new_keywords(word)
