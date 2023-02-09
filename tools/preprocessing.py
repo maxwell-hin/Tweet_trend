@@ -3,7 +3,8 @@ import advertools as adv
 import random
 pd.options.mode.chained_assignment = None  # default='warn'
 
-raw_df = pd.read_csv("./outputs/McDonald's_2022-06-01_2022-12-31.csv")
+# raw_df = pd.read_csv("./outputs/McDonald's_2022-06-01_2022-12-31.csv")
+# df_downsample = pd.read_csv("./outputs/Mcdonalds_downsample.csv")
 
 
 def remove_emoji(sentence):
@@ -26,7 +27,7 @@ def clean_df(raw_df):
     raw_df.drop('index', inplace=True, axis=1)
     raw_df.dropna(subset=['Tweet URL'], inplace=True)
     raw_df['Timestamp'] = raw_df['Timestamp'].apply(lambda x: x[:10])
-    raw_df_downsample = raw_df.groupby(raw_df['Timestamp']).sample(frac=0.2, random_state=random.randint(0,1000))
+    raw_df_downsample = raw_df.groupby(raw_df['Timestamp']).sample(frac=0.08, random_state=random.randint(0,1000))
     raw_df_downsample.reset_index(drop=True)
     raw_df_downsample['Comments'] = raw_df_downsample['Comments'].astype('int')
     raw_df_downsample['Retweets'] = raw_df_downsample['Retweets'].astype('int')
@@ -36,8 +37,8 @@ def clean_df(raw_df):
     raw_df_downsample['Embedded_text'] = raw_df_downsample['Embedded_text'].apply(remove_emoji)
     return raw_df_downsample
 
-data = clean_df(raw_df)
-
+# data = clean_df(raw_df)
+# type(data['Emojis'].iloc[0])
 # import time
 # start = time.time()
 # raw_df_downsample['Emojis'] = raw_df_downsample['Embedded_text'].apply(create_emoji_ls)

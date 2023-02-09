@@ -2,14 +2,11 @@ import tools.AzureSQL_DDL as az
 import tools.tweet_analysis as tw
 import pandas as pd
 
-kw = ["mcdonalds",'Burger King']
-time = '_2022-06-01_2022-12-31.csv'
 
-raw_df = pd.read_csv('./outputs/'+kw[1]+time)
-raw_df.dropna(subset=['Embedded_text', 'Emojis'], how='all', inplace = True)
-trans_df = tw.combine_df(raw_df)
-bol, kw_id = az.keyword_hist("Burger King")
-az.update_records(trans_df,kw_id)
+trans_df = pd.read_csv('test.csv')
 
+az.update_records(trans_df)
 
-tw.check_object(trans_df['Retweets']).loc[1234]
+# data = az.download_from_db(2,'2020-06-01','2020-06-08')
+# data.columns
+# data

@@ -4,7 +4,7 @@ import numpy as np
 import os
 # os.getcwd()
 # os.chdir("/Users/jen/Desktop/PJ/Tweet_trend")
-# McDonald = pd.read_csv("./outputs/McDonald's_2022-06-01_2022-12-31.csv")
+df = pd.read_csv("test.csv")
 # pepsi.dropna(subset=['Embedded_text', 'Emojis'], how='all', inplace = True)
 import nltk
 from nltk.tokenize import word_tokenize
@@ -41,7 +41,9 @@ def tokenize_and_process(sentence, kw=None):
     lemmatizer = WordNetLemmatizer()
     stop_words = set(stopwords.words('english'))
     forbidden_word = ['http','fuck','nigger','damn','shit','Replying', 'replying','reply','twitter']
-    meaningful_words = [lemmatizer.lemmatize(stemmer.stem(word.lower())) for word in tokens if word.lower() not in stop_words and word not in punctuation and word not in forbidden_word and word.isalpha() and word.encode("utf-8").isascii() and word != kw]
+    if kw!=None:
+        kw = ''.join(c for c in kw if c.isalnum())
+    meaningful_words = [lemmatizer.lemmatize(stemmer.stem(word.lower())) for word in tokens if word.lower() not in stop_words and word not in punctuation and word not in forbidden_word and word.isalpha() and word.encode("utf-8").isascii() and word != kw.lower()]
     return meaningful_words
 
 
@@ -60,13 +62,20 @@ def df_text_token2list(raw_df, kw=None):
     return word_list
 
 
+def flatten_tokens(df):
+    word_list = []
+    for row in df['word_token']:
+        tokens = row.split(',')
+        word_list.extend(tokens)
+    return word_list
 
-def gen_freq(raw_df, kw=None, num=20):
-    word_list = df_text_token2list(raw_df, kw=kw)
+
+def gen_freq(df, kw=None, num=20):
+    word_list = flatten_tokens(df)
     word_freq = pd.Series(word_list).value_counts()
     return word_freq[:num]
 
-
+gen_freq(df)
 
 #======Tranforming raw to trans_df
 def emo_sent_score(raw_df):
@@ -222,8 +231,7 @@ def max_tweets (df):
 
     return [max_likes, max_cm, max_retweets, max_quotes, url_likes, url_cm, url_retweets, url_quotes]
 
-# test = max_tweets (df)
-# test
+
 
 
 #word_cloud123
