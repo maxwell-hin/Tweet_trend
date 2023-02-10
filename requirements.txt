@@ -5,3 +5,8 @@ python-dotenv
 chromedriver-autoinstaller
 geckodriver-autoinstaller
 urllib3
+pyodbc
+nltk
+matplotlib
+wordcloud
+advertools
