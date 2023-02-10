@@ -34,8 +34,6 @@ def keyword_hist(kw):
         return False, None
 
 
-keyword_hist('KFC')
-
 # find date range of history tweets
 
 
@@ -57,13 +55,14 @@ def hist_date_range(kw_id):
 
 
 def tweet2query(df, kw_id):
-    query = '''INSERT INTO JMJ.tweets (keyword_id, user_name, time_stamp, comments_no, likes_no, retweets_no, word_token, text_neg, text_neu, text_pos, text_comp, emoji_sent, tweet_url) VALUES (
+    query = '''INSERT INTO JMJ.tweets (keyword_id, user_name, time_stamp, comments_no, likes_no, retweets_no, quotes_no, word_token, text_neg, text_neu, text_pos, text_comp, emoji_sent, tweet_url) VALUES (
     {kw_id},
     {username},
     '{timestamp}',
     {comment},
     {like},
     {retweet},
+    {quote},
     {word_token},
     {text_neg},
     {text_neu},
@@ -72,7 +71,8 @@ def tweet2query(df, kw_id):
     {emoji_sent},
     '{tweet_url}'
     );'''
-    return query.format(kw_id=kw_id, username='NULL' if pd.isna(df.Username) else "'"+df.Username+"'", timestamp=df.Timestamp, comment=0 if pd.isna(df.Comments) else df.Comments, like=0 if pd.isna(df.Likes) else df.Likes, retweet=0 if pd.isna(df.Retweets) else df.Retweets, word_token='NULL' if pd.isnull(df['word_token']) else "'"+df['word_token']+"'", text_neg=df['neg'], text_neu=df['neu'], text_pos=df['pos'], text_compound=df['compound'], emoji_sent=df['emoji_sent'], tweet_url=df['Tweet URL'])
+    return query.format(kw_id=kw_id, username='NULL' if pd.isna(df.Username) else "'"+df.Username+"'", timestamp=df.Timestamp, comment=0 if pd.isna(df.Comments) else df.Comments, like=0 if pd.isna(df.Likes) else df.Likes, retweet=0 if pd.isna(df.Retweets) else df.Retweets, quote=0 if pd.isna(df.Quotes) else df.Quotes,
+                        word_token='NULL' if pd.isnull(df['word_token']) else "'"+df['word_token']+"'", text_neg=df['neg'], text_neu=df['neu'], text_pos=df['pos'], text_compound=df['compound'], emoji_sent=df['emoji_sent'], tweet_url=df['Tweet URL'])
 
 
 # print(tweet2query(trans_df.iloc[1234],2))
@@ -106,7 +106,7 @@ def new_keywords(keyword):
 # ======================Query data
 
 def download_from_db(kw_id, since, until):
-    query = f"SELECT * FROM JMJ.tweets WHERE keyword_id = {kw_id} AND time_stamp >= {since} AND time_stamp<= {until};"
+    query = f"SELECT * FROM JMJ.tweets WHERE keyword_id = {kw_id} AND time_stamp BETWEEN '{since}' AND  '{until}';"
     cnxn = connect_asql()
     cursor = cnxn.cursor()
     cursor.execute(query)
@@ -119,7 +119,8 @@ def download_from_db(kw_id, since, until):
         df_tem = pd.DataFrame([df_list])
         df = pd.concat([df, df_tem])
         row = cursor.fetchone()
-    df.columns = ['tweet_id', 'keyword_id', 'user_name', 'time_stamp', 'comments_no', 'likes_no',
-                  'retweets_no', 'word_token', 'text_neg', 'text_neu', 'text_pos', 'text_comp', 'emoji_sent', 'tweet_url']
+    df.columns = ['tweet_id', 'keyword_id', 'user_name', 'Timestamp', 'Comments', 'Likes',
+                  'Retweets', 'Quotes', 'emoji_sent', 'text_neg', 'text_neu', 'text_pos', 'compound',  'word_token', 'Tweet URL']
     df.drop(['tweet_id'], axis=1, inplace=True)
+    df.reset_index(drop=True)
     return df
