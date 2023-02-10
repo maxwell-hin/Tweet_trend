@@ -106,7 +106,7 @@ def new_keywords(keyword):
 # ======================Query data
 
 def download_from_db(kw_id, since, until):
-    query = f"SELECT * FROM JMJ.tweets WHERE keyword_id = {kw_id};"
+    query = f"SELECT * FROM JMJ.tweets WHERE keyword_id = {kw_id} AND time_stamp >= {since} AND time_stamp<= {until};"
     cnxn = connect_asql()
     cursor = cnxn.cursor()
     cursor.execute(query)
