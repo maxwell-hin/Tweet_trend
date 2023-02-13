@@ -11,12 +11,14 @@ import re
 
 def init_question():
     num_kw = int(input('How many keywords you would like to compare?: '))
-    kw = ''
+    kw_ls = []
+    ticker_ls = []
     for i in range(0, num_kw):
         tem = input(f'Please input keyword {i+1}: ')
-        kw = kw + tem + ','
-    kw = kw[:-1]
-    kw_ls = kw.split(',')
+        tem_ticks = input(
+            f"Please input the tickers of {tem}: \n(input 'no' if stock price comparison is not wanted) ")
+        kw_ls.append(tem)
+        ticker_ls.append(tem_ticks)
     since = input('Which is the start date of tweets? e.g. 2022-06-01: ')
     pattern = re.compile(r'\d{4}-\d{2}-\d{2}')
     assert pattern.match(since), print(
@@ -24,7 +26,7 @@ def init_question():
     until = input('Which is the end date of tweets? e.g. 2022-11-21: ')
     assert pattern.match(until), print(
         '!!Please input the date in the format of YYYY-MM-DD!!')
-    return kw_ls, num_kw, since, until
+    return kw_ls, ticker_ls, since, until
 
 
 def query(text, since, until):
@@ -67,33 +69,15 @@ def snscraperper(text, since, until, interval=3):
 
     # Creating a dataframe from the tweets list above
     tweets_df = pd.DataFrame(tweet_list, columns=[
-                             'Timestamp', 'Username', 'Embedded_text', 'Likes', 'Comments', 'Retweets', 'Quotes', 'Hashtags', 'Cashtags','Tweet URL'])
+                             'Timestamp', 'Username', 'Embedded_text', 'Likes', 'Comments', 'Retweets', 'Quotes', 'Hashtags', 'Cashtags', 'Tweet URL'])
     return tweets_df
 
 
-# text='KFC'; since='2022-06-01'; until='2022-12-31'
-
-
-# def run_scrape(words, since, until,interval,geocode):
-#     data = scrape(words=words, since=since, until=until, from_account=None, interval=interval,
-#                   headless=False, display_type="Latest", save_images=False, lang="en",
-#                   resume=False, filter_replies=False, proximity=False, limit=float('inf'), geocode=geocode)
-#     data.dropna(subset=['Embedded_text', 'Emojis'], how='all', inplace = True)
-#     return data
-# data = pd.read_csv("./McDonald's_2022-06-01_2022-12-31.csv")
-
-
-# tic = time.time()
-# data = run_scrape("McDonald's", '2022-01-01T06:00:30 000Z', '2022-01-03T06:00:30 000Z',1)
-# tac = time.time()
-# print(f'runtime: {round(tac-tic,2)/60} mins')
-
 # US_geo = '41.4925374,-99.9018131,1500km'
-
 
 if __name__ == "__main__":
     # return keywords, knowing the date range
-    kw_ls, num_kw, since, until = init_question()
+    kw_ls, ticker_ls, since, until = init_question()
     compare_ls = []
     for word in kw_ls:  # create df for analysis for each keywords and append to compare_ls
         # find if kw has been searh
@@ -116,7 +100,7 @@ if __name__ == "__main__":
                 data = pp.clean_df(data)
 
                 # Transform, sentiment analysis, word_tokenized
-                trans_data = tw.combine_df(data,word)
+                trans_data = tw.combine_df(data, word)
 
                 # upload to db
                 az.update_records(trans_data, kw_id)
@@ -132,7 +116,7 @@ if __name__ == "__main__":
                 data = pp.clean_df(data)
 
                 # Transform, sentiment analysis, word_tokenized
-                trans_data = tw.combine_df(data,word)
+                trans_data = tw.combine_df(data, word)
 
                 # upload to db
                 az.update_records(trans_data, kw_id)
@@ -149,7 +133,7 @@ if __name__ == "__main__":
                 data = pp.clean_df(data)
 
                 # Transform, sentiment analysis, word_tokenized
-                df = tw.combine_df(data,word)
+                df = tw.combine_df(data, word)
 
                 # upload to db
                 az.update_records(trans_data, kw_id)
@@ -165,7 +149,7 @@ if __name__ == "__main__":
                 data = pp.clean_df(data)
 
                 # Transform, sentiment analysis, word_tokenized
-                trans_data = tw.combine_df(data,word)
+                trans_data = tw.combine_df(data, word)
 
                 # upload to db
                 az.update_records(trans_data, kw_id)
@@ -219,7 +203,12 @@ if __name__ == "__main__":
             Total no. of retweets: {tw.ratio_tweets(compare_ls[ind][5])}
             ''')
 
-    # =popularity
+    # =popularity, sentiment and stock
+    for ind, word in enumerate(kw_ls):
+        if ticker_ls[ind] != 'n':
+            tw.plot(compare_ls[ind], word, since, until, ticker=ticker_ls[ind])
+        else:
+            tw.plot(compare_ls[ind], word, since, until)
 
     # =wordcloud
     # frequecy of top 20 words
