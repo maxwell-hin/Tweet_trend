@@ -53,7 +53,7 @@ def snscraperper(text, since, until, interval=3):
         try:
             for i, tweet in enumerate(sntwitter.TwitterSearchScraper(q).get_items()):
                 tweet_list.append([tweet.date, tweet.user.username, tweet.rawContent,  tweet.likeCount,
-                                  tweet.replyCount, tweet.retweetCount, tweet.quoteCount, tweet.url])
+                                  tweet.replyCount, tweet.retweetCount, tweet.quoteCount, tweet.hashtags, tweet.cashtags, tweet.url])
                 counter += 1
                 if counter % 500 == 0:
                     print(f'{counter} scrapped')
@@ -67,7 +67,7 @@ def snscraperper(text, since, until, interval=3):
 
     # Creating a dataframe from the tweets list above
     tweets_df = pd.DataFrame(tweet_list, columns=[
-                             'Timestamp', 'Username', 'Embedded_text', 'Likes', 'Comments', 'Retweets', 'Quotes', 'Tweet URL'])
+                             'Timestamp', 'Username', 'Embedded_text', 'Likes', 'Comments', 'Retweets', 'Quotes', 'Hashtags', 'Cashtags','Tweet URL'])
     return tweets_df
 
 
@@ -116,7 +116,7 @@ if __name__ == "__main__":
                 data = pp.clean_df(data)
 
                 # Transform, sentiment analysis, word_tokenized
-                trans_data = tw.combine_df(data)
+                trans_data = tw.combine_df(data,word)
 
                 # upload to db
                 az.update_records(trans_data, kw_id)
@@ -132,7 +132,7 @@ if __name__ == "__main__":
                 data = pp.clean_df(data)
 
                 # Transform, sentiment analysis, word_tokenized
-                trans_data = tw.combine_df(data)
+                trans_data = tw.combine_df(data,word)
 
                 # upload to db
                 az.update_records(trans_data, kw_id)
@@ -149,7 +149,7 @@ if __name__ == "__main__":
                 data = pp.clean_df(data)
 
                 # Transform, sentiment analysis, word_tokenized
-                df = tw.combine_df(data)
+                df = tw.combine_df(data,word)
 
                 # upload to db
                 az.update_records(trans_data, kw_id)
@@ -165,7 +165,7 @@ if __name__ == "__main__":
                 data = pp.clean_df(data)
 
                 # Transform, sentiment analysis, word_tokenized
-                trans_data = tw.combine_df(data)
+                trans_data = tw.combine_df(data,word)
 
                 # upload to db
                 az.update_records(trans_data, kw_id)

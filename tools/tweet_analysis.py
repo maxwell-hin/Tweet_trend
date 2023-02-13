@@ -33,16 +33,15 @@ def tokenize_and_process(sentence, kw=None):
     stemmer = PorterStemmer()
     lemmatizer = WordNetLemmatizer()
     stop_words = set(stopwords.words('english'))
-    forbidden_word = ['http', 'fuck', 'nigger', 'damn',
-                      'shit', 'Replying', 'replying', 'reply', 'twitter']
-    if kw != None:
-        kw = ''.join(c for c in kw if c.isalnum())
-        meaningful_words = [lemmatizer.lemmatize(stemmer.stem(word.lower())) for word in tokens if word.lower(
-        ) not in stop_words and word not in punctuation and word not in forbidden_word and word.isalpha() and word.encode("utf-8").isascii() and word != kw.lower()]
+    forbidden_word = ['http', 'https', 'replying',
+                      'replying', 'reply', 'twitter', kw.lower(), 'get', 'got']
     meaningful_words = [lemmatizer.lemmatize(stemmer.stem(word.lower())) for word in tokens if word.lower(
-    ) not in stop_words and word not in punctuation and word not in forbidden_word and word.isalpha() and word.encode("utf-8").isascii()]
+    ) not in stop_words and word not in punctuation and word not in forbidden_word and word.isalpha()]
 
     return meaningful_words
+
+
+# sentence = df['Embedded_text'].iloc[0]
 
 
 def df_text_token2list(raw_df, kw=None):
@@ -62,9 +61,12 @@ def df_text_token2list(raw_df, kw=None):
 def flatten_tokens(df):
     word_list = []
     for row in df['word_token']:
-        print(1)
         tokens = row.split(',')
         word_list.extend(tokens)
+        exclude_ls = ['repl',]
+        for word in tokens:
+            if word in exclude_ls:
+                word_list.remove(word)
     return word_list
 
 
@@ -107,8 +109,8 @@ def emo_sent_score(raw_df):
 # emo_sent_score(df)
 
 
-def sent2token(sentence):
-    words = tokenize_and_process(sentence)
+def sent2token(sentence, kw=None):
+    words = tokenize_and_process(sentence, kw)
     return words
 
 
@@ -158,11 +160,11 @@ def raw_user_df(raw_df):
     return tweet_raw_col
 
 
-def create_wordls(raw_df):
+def create_wordls(raw_df, kw=None):
     text_ls = pd.DataFrame()
     for lab, row in raw_df.iterrows():
         try:
-            text_chain = ','.join(sent2token(row['Embedded_text']))
+            text_chain = ','.join(sent2token(row['Embedded_text'], kw))
         except:
             text_chain = ''
         text_ls = pd.concat([text_ls, pd.Series(text_chain)])
@@ -171,9 +173,9 @@ def create_wordls(raw_df):
     return text_ls
 
 
-def combine_df(raw_df):
+def combine_df(raw_df, kw=None):
     trans_df = pd.concat([raw_user_df(raw_df), emosent_df(
-        raw_df), keyword_sent_score(raw_df), create_wordls(raw_df)], axis=1)
+        raw_df), keyword_sent_score(raw_df), create_wordls(raw_df, kw)], axis=1)
     # print(df4.head())
     # print(df4.info())
     return trans_df
@@ -306,9 +308,6 @@ def sentiment_score(df):
     # daily_sentiment_score = daily_sentiment_score.set_index('Timestamp')
     sent_score = daily_sentiment_score['sum']
     return sent_score
-
-
-sent_score = sentiment_score(df)
 
 
 def normalized(df):
