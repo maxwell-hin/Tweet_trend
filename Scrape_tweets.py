@@ -33,10 +33,11 @@ def query(text, since, until):
     q = text  # keyword
     q += f" until:{until}"
     q += f" since:{since}"
+    q += f" geocode:41.4925374,-99.9018131,1500km"
     return q
 
 
-def snscraperper(text, since, until, interval=3):
+def snscraperper(text, since, until, interval=1):
     d = interval
     tweet_list = []
 
