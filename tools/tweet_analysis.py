@@ -150,7 +150,7 @@ def raw_user_df(raw_df):
     tweet_raw_col = tweet_raw_col.assign(
         Retweets=check_object(tweet_raw_col.loc[:, 'Retweets']))
     tweet_raw_col = tweet_raw_col.assign(
-        Retweets=check_object(tweet_raw_col.loc[:, 'Quotes']))
+        Quotes=check_object(tweet_raw_col.loc[:, 'Quotes']))
     tweet_raw_col = tweet_raw_col.reset_index(drop=True)
     # print(rawdf)
     return tweet_raw_col
@@ -203,7 +203,7 @@ def ratio_tweets(df):
     comments_ratio = total_comments/total_scores
     retweets_ratio = total_retweets/total_scores
     quotes_ratio = total_quotes/total_scores
-    return total_likes, total_comments, total_retweets, total_quotes, likes_ratio, comments_ratio, retweets_ratio, quotes_ratio
+    return total_likes, total_comments, total_retweets, total_quotes, round(likes_ratio, 2), round(comments_ratio, 2), round(retweets_ratio, 2), round(quotes_ratio, 2)
 
 
 def max_tweets(df):
@@ -220,7 +220,7 @@ def max_tweets(df):
     return [max_likes, max_cm, max_retweets, max_quotes, url_likes, url_cm, url_retweets, url_quotes]
 
 
-def word_cloud(df, num=80):
+def word_cloud(df, word, num=80):
     from wordcloud import WordCloud
     import random
     colormaps = ['Paired', 'Accent', 'Dark2',
@@ -233,10 +233,12 @@ def word_cloud(df, num=80):
 
     plt.figure(figsize=(12, 8))
     plt.imshow(wc, interpolation='bilinear')
+    plt.title(word, fontsize=25)
     plt.axis('off')
     plt.show()
 
 
+# =================plots===================
 def removetime1(df):
     df['Timestamp'] = pd.to_datetime(df['Timestamp']).dt.date
     return df['Timestamp']
@@ -279,11 +281,8 @@ df = pd.read_csv('test.csv')
 
 
 def plot(df, kw, since, until, ticker=None, interval='1d'):
-    from yahoo_fin.stock_info import get_data
+
     import matplotlib.dates as mdates
-    stock_data = get_data(ticker, start_date=since,
-                          end_date=until, index_as_date=True, interval=interval)
-    stock_data = stock_data.resample('D').interpolate()
 
     pop = daily_popularity_score(df)
     pop.index = pd.to_datetime(pop.index)
@@ -294,6 +293,10 @@ def plot(df, kw, since, until, ticker=None, interval='1d'):
     sent = sent.resample('D').interpolate()
 
     if ticker != None:
+        from yahoo_fin.stock_info import get_data
+        stock_data = get_data(ticker, start_date=since,
+                              end_date=until, index_as_date=True, interval=interval)
+        stock_data = stock_data.resample('D').interpolate()
         fig, axs = plt.subplots(3, 1, figsize=(10, 15), sharex=True)
     else:
         fig, axs = plt.subplots(2, 1, figsize=(10, 10), sharex=True)
@@ -304,25 +307,17 @@ def plot(df, kw, since, until, ticker=None, interval='1d'):
     axs[1].plot(sent)
     axs[1].set(ylabel='Sentiment Score')
 
-    # if ticker != None:
-    axs[2].plot(stock_data['adjclose'])
-    axs[2].set(ylabel=f'Stock Price of {ticker.upper()}')
+    if ticker != None:
+        axs[2].plot(stock_data['adjclose'])
+        axs[2].set(ylabel=f'Stock Price of {ticker.upper()}')
 
     axs[0].xaxis.set_major_locator(mdates.MonthLocator())
     axs[0].xaxis.set_major_formatter(mdates.DateFormatter('%m-%Y'))
     axs[0].xaxis.set_minor_locator(mdates.DayLocator())
-    plt.show()
+    plt.show(block=False)
 
-
-# need==============
-df = trans_df
-kw = 'PlayStation'
-ticker = 'SONY'
-since = '2022-01-01'
-until = '2022-12-31'
-interval = '1d'
-
-stock_data['adjclose'].plot()
-plt.show()
-for i in y.index:
-    print(i)
+# for ind, word in enumerate(kw_ls):
+#         if ticker_ls[ind] != 'n':
+#             tw.plot(compare_ls[ind], word, since, until, ticker=ticker_ls[ind])
+#         else:
+#             tw.plot(compare_ls[ind], word, since, until)

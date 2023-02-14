@@ -43,17 +43,16 @@ def hist_date_range(kw_id):
     cursor.execute(f'''SELECT max(time_stamp) FROM JMJ.tweets
                         WHERE keyword_id = {kw_id};    ''')
     row = cursor.fetchone()
-    earliest_tweet = row[0].strftime("%Y-%m-%d")
+    latest_tweet = row[0].strftime("%Y-%m-%d")
     cursor.execute(f'''SELECT min(time_stamp) FROM JMJ.tweets
                         WHERE keyword_id = {kw_id};    ''')
     row = cursor.fetchone()
     oldest_tweet = row[0].strftime("%Y-%m-%d")
     cursor.close()
-    return earliest_tweet, oldest_tweet
+    return oldest_tweet, latest_tweet
+
 
 # ============insert data
-
-
 def tweet2query(df, kw_id):
     query = '''INSERT INTO JMJ.tweets (keyword_id, user_name, time_stamp, comments_no, likes_no, retweets_no, quotes_no, word_token, text_neg, text_neu, text_pos, text_comp, emoji_sent, tweet_url) VALUES (
     {kw_id},

@@ -55,7 +55,18 @@ import tools.preprocessing as pp
 # df.to_csv('Playstation_0101_1231.csv')
 
 
-df = pd.read_csv('Playstation_0101_1231.csv')
+play_df = pd.read_csv('Playstation_0101_1231.csv')
+play_df = pp.clean_df(play_df)
+play_trans_df = tw.combine_df(play_df, kw='Playstation')
 
-df = pp.clean_df(df)
-trans_df = tw.combine_df(df, kw='Playstation')
+xbox_df = pd.read_csv('Xbox.csv')
+xbox_df = pp.clean_df(xbox_df)
+xbox_trans_df = tw.combine_df(xbox_df, kw='Xbox')
+
+switch_df = pd.read_csv('scrape_switch.csv')
+switch_df = pp.clean_df(switch_df)
+switch_trans_df = tw.combine_df(switch_df, kw='Switch')
+
+# az.update_records(play_trans_df, 1)
+# az.update_records(switch_trans_df,2)
+# az.update_records(xbox_trans_df.iloc[miss_ls],3)

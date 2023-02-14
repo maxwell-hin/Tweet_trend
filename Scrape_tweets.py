@@ -4,7 +4,6 @@ import tools.tweet_analysis as tw
 import tools.AzureSQL_DDL as az
 import tools.preprocessing as pp
 from datetime import datetime
-import time
 import snscrape.modules.twitter as sntwitter
 import re
 
@@ -18,7 +17,10 @@ def init_question():
         tem_ticks = input(
             f"Please input the tickers of {tem}: \n(input 'no' if stock price comparison is not wanted) ")
         kw_ls.append(tem)
-        ticker_ls.append(tem_ticks)
+        if tem_ticks == 'no':
+            ticker_ls.append('n')
+        else:
+            ticker_ls.append(tem_ticks)
     since = input('Which is the start date of tweets? e.g. 2022-06-01: ')
     pattern = re.compile(r'\d{4}-\d{2}-\d{2}')
     assert pattern.match(since), print(
@@ -86,7 +88,7 @@ if __name__ == "__main__":
         if trigger:  # if keywords has been searched
             hist_start, hist_end = az.hist_date_range(kw_id)
 
-            # ====within done
+            # ====within
             if datetime.strptime(hist_start, '%Y-%m-%d') <= datetime.strptime(since, '%Y-%m-%d') and datetime.strptime(hist_end, '%Y-%m-%d') >= datetime.strptime(until, '%Y-%m-%d'):
 
                 # download data
@@ -183,26 +185,29 @@ if __name__ == "__main__":
     # =show the summary for each keywords enter
     for ind, word in enumerate(kw_ls):
         print(f'''Summary for {word}:
-            Total no. of tweets: {tw.sum_tweets(compare_ls[ind][0])}
-            Total no. of likes: {tw.sum_tweets(compare_ls[ind][1])}
-            Total no. of comments: {tw.sum_tweets(compare_ls[ind][2])}
-            Total no. of retweets: {tw.sum_tweets(compare_ls[ind][3])}
+            Total no. of tweets: {tw.sum_tweets(compare_ls[ind])[0]}
+            Total no. of likes: {tw.sum_tweets(compare_ls[ind])[1]}
+            Total no. of comments: {tw.sum_tweets(compare_ls[ind])[2]}
+            Total no. of retweets: {tw.sum_tweets(compare_ls[ind])[3]}
+            Total no. of quotes: {tw.sum_tweets(compare_ls[ind])[4]}\n
             ''')
 
     # =Which tweets has maximum
     for ind, word in enumerate(kw_ls):
-        print(f'''Maximum number of likes for '{word}': {tw.max_tweets(compare_ls[ind])[0]}, {tw.max_tweets(compare_ls[ind])[3]}
-            Maximum number of comments for '{word}': {tw.max_tweets(compare_ls[ind])[1]}, {tw.max_tweets(compare_ls[ind])[4]}
-            Maximum number of retweets for '{word}': {tw.max_tweets(compare_ls[ind])[2]}, {tw.max_tweets(compare_ls[ind])[5]}
-            ''')
+        print(f'''Maximum number of likes for '{word}': {tw.max_tweets(compare_ls[ind])[0]}, \nurl: {tw.max_tweets(compare_ls[ind])[4]}\n
+    Maximum number of comments for '{word}': {tw.max_tweets(compare_ls[ind])[1]}, \nurl: {tw.max_tweets(compare_ls[ind])[5]}\n
+    Maximum number of retweets for '{word}': {tw.max_tweets(compare_ls[ind])[2]}, \nurl: {tw.max_tweets(compare_ls[ind])[6]}\n
+    Maximum number of quotes for '{word}': {tw.max_tweets(compare_ls[ind])[3]}, \nurl: {tw.max_tweets(compare_ls[ind])[7]}\n
+    ''')
 
     # =ratio
     for ind, word in enumerate(kw_ls):
         print(f'''CLS Ratio for {word}:
-            Total no. of likes: {tw.ratio_tweets(compare_ls[ind][3])}
-            Total no. of comments: {tw.ratio_tweets(compare_ls[ind][4])}
-            Total no. of retweets: {tw.ratio_tweets(compare_ls[ind][5])}
-            ''')
+        Total no. of likes: {tw.ratio_tweets(compare_ls[ind])[4]}
+        Total no. of comments: {tw.ratio_tweets(compare_ls[ind])[5]}
+        Total no. of retweets: {tw.ratio_tweets(compare_ls[ind])[6]}
+        Total no. of quotes: {tw.ratio_tweets(compare_ls[ind])[7]}
+        ''')
 
     # =popularity, sentiment and stock
     for ind, word in enumerate(kw_ls):
@@ -215,7 +220,7 @@ if __name__ == "__main__":
     # frequecy of top 20 words
     for ind, word in enumerate(kw_ls):
         print(
-            f'{word.capitalize()} has the following common words:/n{tw.gen_freq((compare_ls[ind],word))}')
+            f'{word.capitalize()} has the following common words:\n{tw.gen_freq(compare_ls[ind])}\n')
 
     # show wordcloud
     wordcloud_bool = input('Would you like to show word cloud[y/n]? ')
@@ -226,20 +231,15 @@ if __name__ == "__main__":
 
         # regenerate wordcloud
         regen_wc = input(
-            'Would you like to regenerate another wordcloud with other number of words?')
+            'Would you like to regenerate another wordcloud with other number of words?(y/n)')
         while regen_wc == 'y':
             num_cmword = int(
                 input("How many number of words you would like to show on the wordcloud? "))
             for ind, word in enumerate(kw_ls):
-                print(f"Wordcloud for '{word.capitalize()}'")
-                tw.word_cloud(compare_ls[ind], word, num_cmword)
+                print(f"Wordcloud for '{word}'")
+                tw.word_cloud(compare_ls[ind], word, num=num_cmword)
 
             regen_wc = input(
-                'Would you like to regenerate another wordcloud with other number of words?')
+                'Would you like to regenerate another wordcloud with other number of words?(y/n)')
 
     print('Tweet_app end')
-
-
-# word = 'abc'
-# print(f'''Summary for {word} between {since} and {until}:
-# Total tweets tw.sum_tweets(df)''')
