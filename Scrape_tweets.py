@@ -4,19 +4,23 @@ import tools.tweet_analysis as tw
 import tools.AzureSQL_DDL as az
 import tools.preprocessing as pp
 from datetime import datetime
-import time
 import snscrape.modules.twitter as sntwitter
 import re
 
 
 def init_question():
     num_kw = int(input('How many keywords you would like to compare?: '))
-    kw = ''
+    kw_ls = []
+    ticker_ls = []
     for i in range(0, num_kw):
         tem = input(f'Please input keyword {i+1}: ')
-        kw = kw + tem + ','
-    kw = kw[:-1]
-    kw_ls = kw.split(',')
+        tem_ticks = input(
+            f"Please input the tickers of {tem}: \n(input 'no' if stock price comparison is not wanted) ")
+        kw_ls.append(tem)
+        if tem_ticks == 'no':
+            ticker_ls.append('n')
+        else:
+            ticker_ls.append(tem_ticks)
     since = input('Which is the start date of tweets? e.g. 2022-06-01: ')
     pattern = re.compile(r'\d{4}-\d{2}-\d{2}')
     assert pattern.match(since), print(
@@ -24,17 +28,18 @@ def init_question():
     until = input('Which is the end date of tweets? e.g. 2022-11-21: ')
     assert pattern.match(until), print(
         '!!Please input the date in the format of YYYY-MM-DD!!')
-    return kw_ls, num_kw, since, until
+    return kw_ls, ticker_ls, since, until
 
 
 def query(text, since, until):
     q = text  # keyword
     q += f" until:{until}"
     q += f" since:{since}"
+    q += f" geocode:41.4925374,-99.9018131,1500km"
     return q
 
 
-def snscraperper(text, since, until, interval=3):
+def snscraperper(text, since, until, interval=1):
     d = interval
     tweet_list = []
 
@@ -67,33 +72,15 @@ def snscraperper(text, since, until, interval=3):
 
     # Creating a dataframe from the tweets list above
     tweets_df = pd.DataFrame(tweet_list, columns=[
-                             'Timestamp', 'Username', 'Embedded_text', 'Likes', 'Comments', 'Retweets', 'Quotes', 'Hashtags', 'Cashtags','Tweet URL'])
+                             'Timestamp', 'Username', 'Embedded_text', 'Likes', 'Comments', 'Retweets', 'Quotes', 'Hashtags', 'Cashtags', 'Tweet URL'])
     return tweets_df
 
 
-# text='KFC'; since='2022-06-01'; until='2022-12-31'
-
-
-# def run_scrape(words, since, until,interval,geocode):
-#     data = scrape(words=words, since=since, until=until, from_account=None, interval=interval,
-#                   headless=False, display_type="Latest", save_images=False, lang="en",
-#                   resume=False, filter_replies=False, proximity=False, limit=float('inf'), geocode=geocode)
-#     data.dropna(subset=['Embedded_text', 'Emojis'], how='all', inplace = True)
-#     return data
-# data = pd.read_csv("./McDonald's_2022-06-01_2022-12-31.csv")
-
-
-# tic = time.time()
-# data = run_scrape("McDonald's", '2022-01-01T06:00:30 000Z', '2022-01-03T06:00:30 000Z',1)
-# tac = time.time()
-# print(f'runtime: {round(tac-tic,2)/60} mins')
-
 # US_geo = '41.4925374,-99.9018131,1500km'
-
 
 if __name__ == "__main__":
     # return keywords, knowing the date range
-    kw_ls, num_kw, since, until = init_question()
+    kw_ls, ticker_ls, since, until = init_question()
     compare_ls = []
     for word in kw_ls:  # create df for analysis for each keywords and append to compare_ls
         # find if kw has been searh
@@ -101,7 +88,7 @@ if __name__ == "__main__":
         if trigger:  # if keywords has been searched
             hist_start, hist_end = az.hist_date_range(kw_id)
 
-            # ====within done
+            # ====within
             if datetime.strptime(hist_start, '%Y-%m-%d') <= datetime.strptime(since, '%Y-%m-%d') and datetime.strptime(hist_end, '%Y-%m-%d') >= datetime.strptime(until, '%Y-%m-%d'):
 
                 # download data
@@ -116,7 +103,7 @@ if __name__ == "__main__":
                 data = pp.clean_df(data)
 
                 # Transform, sentiment analysis, word_tokenized
-                trans_data = tw.combine_df(data,word)
+                trans_data = tw.combine_df(data, word)
 
                 # upload to db
                 az.update_records(trans_data, kw_id)
@@ -132,7 +119,7 @@ if __name__ == "__main__":
                 data = pp.clean_df(data)
 
                 # Transform, sentiment analysis, word_tokenized
-                trans_data = tw.combine_df(data,word)
+                trans_data = tw.combine_df(data, word)
 
                 # upload to db
                 az.update_records(trans_data, kw_id)
@@ -149,7 +136,7 @@ if __name__ == "__main__":
                 data = pp.clean_df(data)
 
                 # Transform, sentiment analysis, word_tokenized
-                df = tw.combine_df(data,word)
+                df = tw.combine_df(data, word)
 
                 # upload to db
                 az.update_records(trans_data, kw_id)
@@ -165,7 +152,7 @@ if __name__ == "__main__":
                 data = pp.clean_df(data)
 
                 # Transform, sentiment analysis, word_tokenized
-                trans_data = tw.combine_df(data,word)
+                trans_data = tw.combine_df(data, word)
 
                 # upload to db
                 az.update_records(trans_data, kw_id)
@@ -198,34 +185,42 @@ if __name__ == "__main__":
     # =show the summary for each keywords enter
     for ind, word in enumerate(kw_ls):
         print(f'''Summary for {word}:
-            Total no. of tweets: {tw.sum_tweets(compare_ls[ind][0])}
-            Total no. of likes: {tw.sum_tweets(compare_ls[ind][1])}
-            Total no. of comments: {tw.sum_tweets(compare_ls[ind][2])}
-            Total no. of retweets: {tw.sum_tweets(compare_ls[ind][3])}
+            Total no. of tweets: {tw.sum_tweets(compare_ls[ind])[0]}
+            Total no. of likes: {tw.sum_tweets(compare_ls[ind])[1]}
+            Total no. of comments: {tw.sum_tweets(compare_ls[ind])[2]}
+            Total no. of retweets: {tw.sum_tweets(compare_ls[ind])[3]}
+            Total no. of quotes: {tw.sum_tweets(compare_ls[ind])[4]}\n
             ''')
 
     # =Which tweets has maximum
     for ind, word in enumerate(kw_ls):
-        print(f'''Maximum number of likes for '{word}': {tw.max_tweets(compare_ls[ind])[0]}, {tw.max_tweets(compare_ls[ind])[3]}
-            Maximum number of comments for '{word}': {tw.max_tweets(compare_ls[ind])[1]}, {tw.max_tweets(compare_ls[ind])[4]}
-            Maximum number of retweets for '{word}': {tw.max_tweets(compare_ls[ind])[2]}, {tw.max_tweets(compare_ls[ind])[5]}
-            ''')
+        print(f'''Maximum number of likes for '{word}': {tw.max_tweets(compare_ls[ind])[0]}, \nurl: {tw.max_tweets(compare_ls[ind])[4]}\n
+    Maximum number of comments for '{word}': {tw.max_tweets(compare_ls[ind])[1]}, \nurl: {tw.max_tweets(compare_ls[ind])[5]}\n
+    Maximum number of retweets for '{word}': {tw.max_tweets(compare_ls[ind])[2]}, \nurl: {tw.max_tweets(compare_ls[ind])[6]}\n
+    Maximum number of quotes for '{word}': {tw.max_tweets(compare_ls[ind])[3]}, \nurl: {tw.max_tweets(compare_ls[ind])[7]}\n
+    ''')
 
     # =ratio
     for ind, word in enumerate(kw_ls):
         print(f'''CLS Ratio for {word}:
-            Total no. of likes: {tw.ratio_tweets(compare_ls[ind][3])}
-            Total no. of comments: {tw.ratio_tweets(compare_ls[ind][4])}
-            Total no. of retweets: {tw.ratio_tweets(compare_ls[ind][5])}
-            ''')
+        Total no. of likes: {tw.ratio_tweets(compare_ls[ind])[4]}
+        Total no. of comments: {tw.ratio_tweets(compare_ls[ind])[5]}
+        Total no. of retweets: {tw.ratio_tweets(compare_ls[ind])[6]}
+        Total no. of quotes: {tw.ratio_tweets(compare_ls[ind])[7]}
+        ''')
 
-    # =popularity
+    # =popularity, sentiment and stock
+    for ind, word in enumerate(kw_ls):
+        if ticker_ls[ind] != 'n':
+            tw.plot(compare_ls[ind], word, since, until, ticker=ticker_ls[ind])
+        else:
+            tw.plot(compare_ls[ind], word, since, until)
 
     # =wordcloud
     # frequecy of top 20 words
     for ind, word in enumerate(kw_ls):
         print(
-            f'{word.capitalize()} has the following common words:/n{tw.gen_freq((compare_ls[ind],word))}')
+            f'{word.capitalize()} has the following common words:\n{tw.gen_freq(compare_ls[ind])}\n')
 
     # show wordcloud
     wordcloud_bool = input('Would you like to show word cloud[y/n]? ')
@@ -236,20 +231,15 @@ if __name__ == "__main__":
 
         # regenerate wordcloud
         regen_wc = input(
-            'Would you like to regenerate another wordcloud with other number of words?')
+            'Would you like to regenerate another wordcloud with other number of words?(y/n)')
         while regen_wc == 'y':
             num_cmword = int(
                 input("How many number of words you would like to show on the wordcloud? "))
             for ind, word in enumerate(kw_ls):
-                print(f"Wordcloud for '{word.capitalize()}'")
-                tw.word_cloud(compare_ls[ind], word, num_cmword)
+                print(f"Wordcloud for '{word}'")
+                tw.word_cloud(compare_ls[ind], word, num=num_cmword)
 
             regen_wc = input(
-                'Would you like to regenerate another wordcloud with other number of words?')
+                'Would you like to regenerate another wordcloud with other number of words?(y/n)')
 
     print('Tweet_app end')
-
-
-# word = 'abc'
-# print(f'''Summary for {word} between {since} and {until}:
-# Total tweets tw.sum_tweets(df)''')

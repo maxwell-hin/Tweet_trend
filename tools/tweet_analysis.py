@@ -36,7 +36,7 @@ def tokenize_and_process(sentence, kw=None):
     forbidden_word = ['http', 'https', 'replying',
                       'replying', 'reply', 'twitter', kw.lower(), 'get', 'got']
     meaningful_words = [lemmatizer.lemmatize(stemmer.stem(word.lower())) for word in tokens if word.lower(
-    ) not in stop_words and word not in punctuation and word not in forbidden_word and word.isalpha()]
+    ) not in stop_words and word not in punctuation and word.lower() not in forbidden_word and word.isalpha()]
 
     return meaningful_words
 
@@ -76,7 +76,7 @@ def gen_freq(df, num=20):
     return word_freq[:num]
 
 
-# ======Tranforming raw to trans_df
+# ===============Tranforming raw to trans_df=========================
 
 
 def emo_sent_score(raw_df):
@@ -104,10 +104,6 @@ def emo_sent_score(raw_df):
                 emoji_list.append(score_each_tweets)
     return emoji_list
 
-# raw_df['Emojis'].iloc[97]
-# df = raw_df.sample(5000).reset_index(drop=True)
-# emo_sent_score(df)
-
 
 def sent2token(sentence, kw=None):
     words = tokenize_and_process(sentence, kw)
@@ -129,7 +125,7 @@ def keyword_sent_score(raw_df):
     return score_df_keyword
 
 
-# ===================Transform to trans_df
+# ===================Transform to trans_df===============
 
 def emosent_df(raw_df):
     emoji_sentdf = pd.DataFrame({'emoji_sent': emo_sent_score(raw_df)})
@@ -154,7 +150,7 @@ def raw_user_df(raw_df):
     tweet_raw_col = tweet_raw_col.assign(
         Retweets=check_object(tweet_raw_col.loc[:, 'Retweets']))
     tweet_raw_col = tweet_raw_col.assign(
-        Retweets=check_object(tweet_raw_col.loc[:, 'Quotes']))
+        Quotes=check_object(tweet_raw_col.loc[:, 'Quotes']))
     tweet_raw_col = tweet_raw_col.reset_index(drop=True)
     # print(rawdf)
     return tweet_raw_col
@@ -180,23 +176,7 @@ def combine_df(raw_df, kw=None):
     # print(df4.info())
     return trans_df
 
-
-# trans_df = combine_df(raw_df)
-
-# emoji_sentdf = pd.DataFrame({'emoji_sent':emoji_list})
-# print(emoji_sentdf)
-
-# rawdf = pepsi[['UserName','Timestamp','Tweet URL']]
-# print(rawdf)
-
-# df4 = pd.concat([emoji_sentdf,rawdf,score_df1], axis=1)
-# print(df4.head())
-# print(df4.info())
-
-
-# =============Visualization
-
-# def clean_data(df):
+# ================Visualization=================
 
 
 def sum_tweets(df):
@@ -223,7 +203,7 @@ def ratio_tweets(df):
     comments_ratio = total_comments/total_scores
     retweets_ratio = total_retweets/total_scores
     quotes_ratio = total_quotes/total_scores
-    return total_likes, total_comments, total_retweets, total_quotes, likes_ratio, comments_ratio, retweets_ratio, quotes_ratio
+    return total_likes, total_comments, total_retweets, total_quotes, round(likes_ratio, 2), round(comments_ratio, 2), round(retweets_ratio, 2), round(quotes_ratio, 2)
 
 
 def max_tweets(df):
@@ -240,7 +220,7 @@ def max_tweets(df):
     return [max_likes, max_cm, max_retweets, max_quotes, url_likes, url_cm, url_retweets, url_quotes]
 
 
-def word_cloud(df, num=80):
+def word_cloud(df, word, num=80):
     from wordcloud import WordCloud
     import random
     colormaps = ['Paired', 'Accent', 'Dark2',
@@ -253,25 +233,17 @@ def word_cloud(df, num=80):
 
     plt.figure(figsize=(12, 8))
     plt.imshow(wc, interpolation='bilinear')
+    plt.title(word, fontsize=25)
     plt.axis('off')
     plt.show()
-# Popolarity and sentiment Plot
-# df5 = df4.copy()
 
 
+# =================plots===================
 def removetime1(df):
     df['Timestamp'] = pd.to_datetime(df['Timestamp']).dt.date
     return df['Timestamp']
 
 
-# need==============
-# remove_time1 = removetime1(df5)
-# df5['Timestamp'] = remove_time1
-# print(remove_time1)
-# print(df5)
-
-
-# print(df5.info())
 def popularity_score(df):
     total_tweets = len(df)
     total_likes = df['Likes'].sum()
@@ -283,19 +255,10 @@ def popularity_score(df):
     return total_scores
 
 
-# need==============
-# score_pop = popularity_score(df)
-# print("Total Scores:", score_pop)
-
-
 def daily_popularity_score(df):
     daily_sum_tweets = df.groupby('Timestamp').apply(popularity_score)
     return daily_sum_tweets
 
-
-# need==============
-# daily_popularity_score = daily_popularity_score(df5)
-# print(daily_popularity_score)
 
 def sentiment_score(df):
     compound_score = df[['Timestamp', 'compound']]
@@ -310,29 +273,51 @@ def sentiment_score(df):
     return sent_score
 
 
-def normalized(df):
-    normalized_df = (df-df.min())/(df.max()-df.min())
-    return normalized_df
+# def normalized(df):
+#     normalized_df = (df-df.min())/(df.max()-df.min())
+#     return normalized_df
+
+df = pd.read_csv('test.csv')
 
 
-# need==============
-# normalized_popularity_score = normalized(daily_popularity_score)
-# normalized_popularity_score
-# normalized_sentiment_score = normalized(sentiment_score)
-# normalized_sentiment_score.index
+def plot(df, kw, since, until, ticker=None, interval='1d'):
 
+    import matplotlib.dates as mdates
 
-def plot(df):
-    x = sentiment_score(df).index
-    y = daily_popularity_score(df)
-    z = sentiment_score(df)
+    pop = daily_popularity_score(df)
+    pop.index = pd.to_datetime(pop.index)
+    pop = pop.resample('D').interpolate()
 
-    plt.figure()
-    plt.subplot(121)
-    plt.plot(x, y, color="orange", marker="*")
+    sent = sentiment_score(df)
+    sent.index = pd.to_datetime(sent.index)
+    sent = sent.resample('D').interpolate()
 
-    plt.subplot(122)
-    plt.plot(x, z, color="green", marker="*")
-    plt.show()
+    if ticker != None:
+        from yahoo_fin.stock_info import get_data
+        stock_data = get_data(ticker, start_date=since,
+                              end_date=until, index_as_date=True, interval=interval)
+        stock_data = stock_data.resample('D').interpolate()
+        fig, axs = plt.subplots(3, 1, figsize=(10, 15), sharex=True)
+    else:
+        fig, axs = plt.subplots(2, 1, figsize=(10, 10), sharex=True)
 
-# need==============
+    axs[0].plot(pop)
+    axs[0].set(ylabel='Popularity Score')
+
+    axs[1].plot(sent)
+    axs[1].set(ylabel='Sentiment Score')
+
+    if ticker != None:
+        axs[2].plot(stock_data['adjclose'])
+        axs[2].set(ylabel=f'Stock Price of {ticker.upper()}')
+
+    axs[0].xaxis.set_major_locator(mdates.MonthLocator())
+    axs[0].xaxis.set_major_formatter(mdates.DateFormatter('%m-%Y'))
+    axs[0].xaxis.set_minor_locator(mdates.DayLocator())
+    plt.show(block=False)
+
+# for ind, word in enumerate(kw_ls):
+#         if ticker_ls[ind] != 'n':
+#             tw.plot(compare_ls[ind], word, since, until, ticker=ticker_ls[ind])
+#         else:
+#             tw.plot(compare_ls[ind], word, since, until)

@@ -10,3 +10,4 @@ nltk
 matplotlib
 wordcloud
 advertools
+yahoo_fin
