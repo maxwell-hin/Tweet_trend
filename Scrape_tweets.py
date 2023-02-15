@@ -18,10 +18,7 @@ def init_question():
         tem_ticks = input(
             f"Please input the tickers of {tem}: \n(input 'no' if stock price comparison is not wanted) ")
         kw_ls.append(tem)
-        if tem_ticks == 'no':
-            ticker_ls.append('n')
-        else:
-            ticker_ls.append(tem_ticks)
+        ticker_ls.append(tem_ticks)
     since = input('Which is the start date of tweets? e.g. 2022-06-01: ')
     pattern = re.compile(r'\d{4}-\d{2}-\d{2}')
     assert pattern.match(since), print(
@@ -59,7 +56,7 @@ def snscraperper(text, since, until, interval=1):
         try:
             for i, tweet in enumerate(sntwitter.TwitterSearchScraper(q).get_items()):
                 tweet_list.append([tweet.date, tweet.user.username, tweet.rawContent,  tweet.likeCount,
-                                  tweet.replyCount, tweet.retweetCount, tweet.quoteCount, tweet.hashtags, tweet.cashtags, tweet.url])
+                                  tweet.replyCount, tweet.retweetCount, tweet.quoteCount, tweet.url])
                 counter += 1
                 if counter % 500 == 0:
                     print(f'{counter} scrapped')
@@ -73,13 +70,21 @@ def snscraperper(text, since, until, interval=1):
 
     # Creating a dataframe from the tweets list above
     tweets_df = pd.DataFrame(tweet_list, columns=[
-                             'Timestamp', 'Username', 'Embedded_text', 'Likes', 'Comments', 'Retweets', 'Quotes', 'Hashtags', 'Cashtags', 'Tweet URL'])
+                             'Timestamp', 'Username', 'Embedded_text', 'Likes', 'Comments', 'Retweets', 'Quotes', 'Tweet URL'])
     return tweets_df
 
 # US_geo = '41.4925374,-99.9018131,1500km'
 
 
 if __name__ == "__main__":
+
+    # test database connection
+    try:
+        az.connect_asql()
+        print('Database connection established')
+    except ConnectionError('Database connection failed'):
+        print('Database connection failed')
+
     # return keywords, knowing the date range
     kw_ls, ticker_ls, since, until = init_question()
     compare_ls = []
@@ -179,6 +184,7 @@ if __name__ == "__main__":
 
             # download from db
             df = az.download_from_db(kw_id=kw_id, since=since, until=until)
+        print(f'{word} data is ready for analysis. \n')
 
         compare_ls.append(df)
 
@@ -201,6 +207,7 @@ if __name__ == "__main__":
     Maximum number of quotes for '{word}': {tw.max_tweets(compare_ls[ind])[3]}, \nurl: {tw.max_tweets(compare_ls[ind])[7]}\n
     ''')
 
+
     # =ratio
     for ind, word in enumerate(kw_ls):
         print(f'''CLS Ratio for {word}:
@@ -210,15 +217,19 @@ if __name__ == "__main__":
         Total no. of quotes: {tw.ratio_tweets(compare_ls[ind])[7]}
         ''')
 
+    # =pie plot
+    for ind, word in enumerate(kw_ls):
+        tw.pie_ratio(compare_ls[ind], word)
+
     # =popularity, sentiment and stock
     for ind, word in enumerate(kw_ls):
-        if ticker_ls[ind] != 'n':
+        if ticker_ls[ind] != 'no':
             tw.plot(compare_ls[ind], word, since, until, ticker=ticker_ls[ind])
         else:
             tw.plot(compare_ls[ind], word, since, until)
 
     # =wordcloud
-    # frequecy of top 20 words
+    # frequecy of top 10 words
     for ind, word in enumerate(kw_ls):
         print(
             f'{word.capitalize()} has the following common words:\n{tw.gen_freq(compare_ls[ind])}\n')

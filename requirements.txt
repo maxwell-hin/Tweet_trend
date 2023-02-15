@@ -1,5 +1,6 @@
 certifi
 selenium==4.2.0
+snscrape
 pandas
 python-dotenv
 chromedriver-autoinstaller

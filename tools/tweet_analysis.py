@@ -56,7 +56,7 @@ def flatten_tokens(df):
     return word_list
 
 
-def gen_freq(df, num=20):
+def gen_freq(df, num=10):
     word_list = flatten_tokens(df)
     word_freq = pd.Series(word_list).value_counts()
     return word_freq[:num]
@@ -197,10 +197,10 @@ def pie_ratio(df, kw):
             autopct='%1.1f%%', startangle=90, shadow=False,
             explode=(0.1, 0.2, 0.2, 0.2), colors=['yellowgreen', 'gold', 'lightskyblue', 'lightcoral'],
             pctdistance=0.7, labeldistance=1.2, textprops={'fontsize': 10})
-    plt.legend([f'Likes: {total_likes}', f'Comments: {total_comments}',
-               f'Retweets: {total_retweets}', f'Quotes: {total_quotes}'], loc="best")
+    plt.legend([f'Likes: {total_likes:,}', f'Comments: {total_comments:,}',
+               f'Retweets: {total_retweets:,}', f'Quotes: {total_quotes:,}'], loc="lower left")
     plt.title(kw)
-    plt.show(block=False)
+    plt.show()
 
 
 def max_tweets(df):
@@ -232,7 +232,7 @@ def word_cloud(df, word, num=80):
     plt.imshow(wc, interpolation='bilinear')
     plt.title(word, fontsize=25)
     plt.axis('off')
-    plt.show(block=False)
+    plt.show()
 
 
 # =================plots===================
@@ -308,4 +308,4 @@ def plot(df, kw, since, until, ticker=None, interval='1d'):
     # axs[0].xaxis.set_major_formatter(mdates.DateFormatter('%m-%Y'))
     # axs[0].xaxis.set_minor_locator(mdates.DayLocator())
     plt.grid()
-    plt.show(block=False)
+    plt.show()
