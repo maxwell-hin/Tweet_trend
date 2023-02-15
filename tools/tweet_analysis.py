@@ -277,7 +277,6 @@ def sentiment_score(df):
 #     normalized_df = (df-df.min())/(df.max()-df.min())
 #     return normalized_df
 
-df = pd.read_csv('test.csv')
 
 
 def plot(df, kw, since, until, ticker=None, interval='1d'):
@@ -297,27 +296,29 @@ def plot(df, kw, since, until, ticker=None, interval='1d'):
         stock_data = get_data(ticker, start_date=since,
                               end_date=until, index_as_date=True, interval=interval)
         stock_data = stock_data.resample('D').interpolate()
-        fig, axs = plt.subplots(3, 1, figsize=(10, 15), sharex=True)
+        fig, axs = plt.subplots(3, 1, figsize=(7, 5), sharex=False)
     else:
-        fig, axs = plt.subplots(2, 1, figsize=(10, 10), sharex=True)
-
+        fig, axs = plt.subplots(2, 1, figsize=(7, 5), sharex=False)
+        
+    axs[0].set_title(f"Analysis of {kw}" )
     axs[0].plot(pop)
     axs[0].set(ylabel='Popularity Score')
+    axs[0].grid()
 
     axs[1].plot(sent)
     axs[1].set(ylabel='Sentiment Score')
+    axs[1].grid()
+
 
     if ticker != None:
         axs[2].plot(stock_data['adjclose'])
         axs[2].set(ylabel=f'Stock Price of {ticker.upper()}')
 
-    axs[0].xaxis.set_major_locator(mdates.MonthLocator())
-    axs[0].xaxis.set_major_formatter(mdates.DateFormatter('%m-%Y'))
-    axs[0].xaxis.set_minor_locator(mdates.DayLocator())
+    # axs[0].xaxis.set_major_locator(mdates.MonthLocator())
+    # axs[0].xaxis.set_major_formatter(mdates.DateFormatter('%m-%Y'))
+    # axs[0].xaxis.set_minor_locator(mdates.DayLocator())
+    plt.grid()
     plt.show(block=False)
 
-# for ind, word in enumerate(kw_ls):
-#         if ticker_ls[ind] != 'n':
-#             tw.plot(compare_ls[ind], word, since, until, ticker=ticker_ls[ind])
-#         else:
-#             tw.plot(compare_ls[ind], word, since, until)
+
+
