@@ -235,7 +235,7 @@ def word_cloud(df, word, num=80):
     plt.imshow(wc, interpolation='bilinear')
     plt.title(word, fontsize=25)
     plt.axis('off')
-    plt.show()
+    plt.show(block=False)
 
 
 # =================plots===================
