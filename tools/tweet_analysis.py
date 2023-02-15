@@ -2,11 +2,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import datetime
 import numpy as np
-import os
-# os.getcwd()
-# os.chdir("/Users/jen/Desktop/PJ/Tweet_trend")
-# df = pd.read_csv("test.csv")
-# pepsi.dropna(subset=['Embedded_text', 'Emojis'], how='all', inplace = True)
+
 import nltk
 from nltk.tokenize import word_tokenize
 from nltk.stem import PorterStemmer
@@ -17,13 +13,6 @@ nltk.download('punkt')
 nltk.download('stopwords')
 nltk.download('wordnet')
 nltk.download('vader_lexicon')
-
-
-# raw_df = pd.read_csv("./outputs/Mcdonalds_downsample.csv", index_col=0)
-# df = raw_df.iloc[:100].copy()
-# df["Comments"] = df['Comments'].astype("int")
-# df.info()
-
 
 # =================Sentiment Analysis
 
@@ -39,9 +28,6 @@ def tokenize_and_process(sentence, kw=None):
     ) not in stop_words and word not in punctuation and word.lower() not in forbidden_word and word.isalpha()]
 
     return meaningful_words
-
-
-# sentence = df['Embedded_text'].iloc[0]
 
 
 def df_text_token2list(raw_df, kw=None):
@@ -188,9 +174,6 @@ def sum_tweets(df):
     return total_tweets, total_likes, total_comments, total_retweets, total_quotes
 
 
-# test
-
-
 def ratio_tweets(df):
     total_likes = df['Likes'].sum()
     total_comments = df['Comments'].sum()
@@ -204,6 +187,20 @@ def ratio_tweets(df):
     retweets_ratio = total_retweets/total_scores
     quotes_ratio = total_quotes/total_scores
     return total_likes, total_comments, total_retweets, total_quotes, round(likes_ratio, 2), round(comments_ratio, 2), round(retweets_ratio, 2), round(quotes_ratio, 2)
+
+
+def pie_ratio(df, kw):
+    total_likes, total_comments, total_retweets, total_quotes, likes_ratio, comments_ratio, retweets_ratio, quotes_ratio = ratio_tweets(
+        df)
+    data = [likes_ratio, comments_ratio, retweets_ratio, quotes_ratio,]
+    plt.pie(data,
+            autopct='%1.1f%%', startangle=90, shadow=False,
+            explode=(0.1, 0.2, 0.2, 0.2), colors=['yellowgreen', 'gold', 'lightskyblue', 'lightcoral'],
+            pctdistance=0.7, labeldistance=1.2, textprops={'fontsize': 10})
+    plt.legend([f'Likes: {total_likes}', f'Comments: {total_comments}',
+               f'Retweets: {total_retweets}', f'Quotes: {total_quotes}'], loc="best")
+    plt.title(kw)
+    plt.show(block=False)
 
 
 def max_tweets(df):
@@ -273,13 +270,6 @@ def sentiment_score(df):
     return sent_score
 
 
-# def normalized(df):
-#     normalized_df = (df-df.min())/(df.max()-df.min())
-#     return normalized_df
-
-df = pd.read_csv('test.csv')
-
-
 def plot(df, kw, since, until, ticker=None, interval='1d'):
 
     import matplotlib.dates as mdates
@@ -297,27 +287,25 @@ def plot(df, kw, since, until, ticker=None, interval='1d'):
         stock_data = get_data(ticker, start_date=since,
                               end_date=until, index_as_date=True, interval=interval)
         stock_data = stock_data.resample('D').interpolate()
-        fig, axs = plt.subplots(3, 1, figsize=(10, 15), sharex=True)
+        fig, axs = plt.subplots(3, 1, figsize=(7, 5), sharex=False)
     else:
-        fig, axs = plt.subplots(2, 1, figsize=(10, 10), sharex=True)
+        fig, axs = plt.subplots(2, 1, figsize=(7, 5), sharex=False)
 
+    axs[0].set_title(f"Analysis of {kw}")
     axs[0].plot(pop)
     axs[0].set(ylabel='Popularity Score')
+    axs[0].grid()
 
     axs[1].plot(sent)
     axs[1].set(ylabel='Sentiment Score')
+    axs[1].grid()
 
     if ticker != None:
         axs[2].plot(stock_data['adjclose'])
         axs[2].set(ylabel=f'Stock Price of {ticker.upper()}')
 
-    axs[0].xaxis.set_major_locator(mdates.MonthLocator())
-    axs[0].xaxis.set_major_formatter(mdates.DateFormatter('%m-%Y'))
-    axs[0].xaxis.set_minor_locator(mdates.DayLocator())
+    # axs[0].xaxis.set_major_locator(mdates.MonthLocator())
+    # axs[0].xaxis.set_major_formatter(mdates.DateFormatter('%m-%Y'))
+    # axs[0].xaxis.set_minor_locator(mdates.DayLocator())
+    plt.grid()
     plt.show(block=False)
-
-# for ind, word in enumerate(kw_ls):
-#         if ticker_ls[ind] != 'n':
-#             tw.plot(compare_ls[ind], word, since, until, ticker=ticker_ls[ind])
-#         else:
-#             tw.plot(compare_ls[ind], word, since, until)

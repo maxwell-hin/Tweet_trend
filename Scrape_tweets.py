@@ -1,11 +1,12 @@
 import pandas as pd
-# from Scweet_master.Scweet.scweet import scrape
-import tools.tweet_analysis as tw
-import tools.AzureSQL_DDL as az
-import tools.preprocessing as pp
+
 from datetime import datetime
 import snscrape.modules.twitter as sntwitter
 import re
+
+import tools.tweet_analysis as tw
+import tools.AzureSQL_DDL as az
+import tools.preprocessing as pp
 
 
 def init_question():
@@ -75,8 +76,8 @@ def snscraperper(text, since, until, interval=1):
                              'Timestamp', 'Username', 'Embedded_text', 'Likes', 'Comments', 'Retweets', 'Quotes', 'Hashtags', 'Cashtags', 'Tweet URL'])
     return tweets_df
 
-
 # US_geo = '41.4925374,-99.9018131,1500km'
+
 
 if __name__ == "__main__":
     # return keywords, knowing the date range
@@ -243,3 +244,4 @@ if __name__ == "__main__":
                 'Would you like to regenerate another wordcloud with other number of words?(y/n)')
 
     print('Tweet_app end')
+
