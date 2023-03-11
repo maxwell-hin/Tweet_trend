@@ -200,7 +200,7 @@ def pie_ratio(df, kw):
     plt.legend([f'Likes: {total_likes:,}', f'Comments: {total_comments:,}',
                f'Retweets: {total_retweets:,}', f'Quotes: {total_quotes:,}'], loc="lower left")
     plt.title(kw)
-    plt.show()
+    plt.show(block=True)
 
 
 def max_tweets(df):
@@ -226,13 +226,13 @@ def word_cloud(df, word, num=80):
 
     # Generate word cloud
     wc = WordCloud(width=700, height=320, background_color='white', colormap=random.choice(
-        colormaps), random_state=random.randint(0, 100)).generate_from_frequencies(gen_freq(df, num=80))
+        colormaps), random_state=random.randint(0, 100)).generate_from_frequencies(gen_freq(df, num))
 
     plt.figure(figsize=(12, 8))
     plt.imshow(wc, interpolation='bilinear')
     plt.title(word, fontsize=25)
     plt.axis('off')
-    plt.show()
+    plt.show(block=True)
 
 
 # =================plots===================
@@ -303,9 +303,9 @@ def plot(df, kw, since, until, ticker=None, interval='1d'):
     if ticker != None:
         axs[2].plot(stock_data['adjclose'])
         axs[2].set(ylabel=f'Stock Price of {ticker.upper()}')
+        axs[2].grid()
 
     # axs[0].xaxis.set_major_locator(mdates.MonthLocator())
     # axs[0].xaxis.set_major_formatter(mdates.DateFormatter('%m-%Y'))
     # axs[0].xaxis.set_minor_locator(mdates.DayLocator())
-    plt.grid()
-    plt.show()
+    plt.show(block=True)
