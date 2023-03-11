@@ -12,3 +12,6 @@ Python version >=3.8 <3.10
 
 ## Setup
 install libraries from ```requirements.txt```
+
+## Usage
+run ```Scrape_tweets.py``` in CLI
