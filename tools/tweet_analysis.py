@@ -66,7 +66,7 @@ def gen_freq(df, num=10):
 
 
 def emo_sent_score(raw_df):
-    from emosent_py.emosent_b.emosent import get_emoji_sentiment_rank
+    from tools.emosent_py.emosent_b.emosent import get_emoji_sentiment_rank
     emoji_list = []
     for lab, row in raw_df.iterrows():
         if row['Emojis'] == []:
